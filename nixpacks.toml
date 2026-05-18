@@ -1,0 +1,14 @@
+# https://nixpacks.com/docs/configuration/file
+# Used by Railway (and similar) when not building from Dockerfile.
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm start"

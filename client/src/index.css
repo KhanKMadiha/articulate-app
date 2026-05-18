@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes heart-burst {
+  0%   { transform: scale(0) translateY(0);      opacity: 0; }
+  30%  { transform: scale(1.4) translateY(0);    opacity: 1; }
+  60%  { transform: scale(1) translateY(-10px);  opacity: 1; }
+  100% { transform: scale(0.8) translateY(-50px); opacity: 0; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes loading-bar {
+  0%   { width: 0%;   margin-left: 0; }
+  50%  { width: 70%;  margin-left: 15%; }
+  100% { width: 0%;   margin-left: 100%; }
+}
+.animate-heart-burst { animation: heart-burst 0.9s ease-out forwards; }
+.animate-fade-up     { animation: fade-up 0.4s ease-out forwards; }
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dyslexia-friendly mode — Lexend (default) */
+body.dyslexia-mode .font-serif,
+body.dyslexia-mode article p,
+body.dyslexia-mode article h2 {
+  font-family: 'Lexend', sans-serif !important;
+  letter-spacing: 0.03em;
+  word-spacing: 0.12em;
+  line-height: 2.2 !important;
+  font-style: normal !important;
+  text-align: left !important;
+}
+body.dyslexia-mode .font-sans {
+  font-family: 'Lexend', sans-serif !important;
+  letter-spacing: 0.02em;
+}
+/* No italics anywhere in dyslexia mode */
+body.dyslexia-mode em,
+body.dyslexia-mode i {
+  font-style: normal !important;
+}
+/* Extra paragraph spacing */
+body.dyslexia-mode .dyslexia-para + .dyslexia-para {
+  margin-top: 2rem;
+}
+/* Narrower reading column */
+body.dyslexia-mode .passage-container {
+  max-width: 58ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Dyslexia-friendly mode — OpenDyslexic (alternative font) */
+body.dyslexia-mode.dyslexia-opendyslexic .font-serif,
+body.dyslexia-mode.dyslexia-opendyslexic article p,
+body.dyslexia-mode.dyslexia-opendyslexic article h2 {
+  font-family: 'OpenDyslexic', sans-serif !important;
+}
+body.dyslexia-mode.dyslexia-opendyslexic .font-sans {
+  font-family: 'OpenDyslexic', sans-serif !important;
+}
+
+/* Font size overrides (available to all users) */
+body.font-size-large article p,
+body.font-size-large article h2,
+body.font-size-large .passage-text {
+  font-size: 1.2rem !important;
+  line-height: 2.0 !important;
+}
+body.font-size-xlarge article p,
+body.font-size-xlarge article h2,
+body.font-size-xlarge .passage-text {
+  font-size: 1.375rem !important;
+  line-height: 2.15 !important;
+}
+
+/* Reading ruler */
+.reading-ruler {
+  position: fixed;
+  left: 0; right: 0;
+  z-index: 30;
+  pointer-events: none;
+  top: 42%;
+  height: 3.25rem;
+  background: rgba(180, 83, 9, 0.06);
+  border-top: 1.5px solid rgba(180, 83, 9, 0.15);
+  border-bottom: 1.5px solid rgba(180, 83, 9, 0.15);
+}
+
+/* Word highlight while recording */
+.word-spoken {
+  background-color: rgba(180, 83, 9, 0.11);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.word-current {
+  background-color: rgba(180, 83, 9, 0.28);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* Syllable separator */
+.syl-dot {
+  color: rgba(180, 83, 9, 0.35);
+  font-size: 0.7em;
+  vertical-align: middle;
+  margin: 0 0.5px;
+  user-select: none;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased min-h-screen;
+}
+
+::selection {
+  @apply bg-accentSoft text-ink;
+}
+
+@layer components {
+  /* ── Inputs ── */
+  .input {
+    @apply w-full rounded-xl border border-border bg-white/70 px-4 py-3 font-sans text-ink placeholder:text-inkFaint shadow-sm
+           focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-accent px-5 py-3.5
+           font-sans text-sm font-semibold text-white shadow-soft
+           hover:bg-accentDeep active:scale-[0.98] transition-all
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-borderDark bg-white/80 px-5 py-3.5
+           font-sans text-sm font-medium text-ink hover:border-ink/30 hover:bg-white
+           active:scale-[0.98] transition-all disabled:opacity-50;
+  }
+
+  /* ── Chips ── */
+  .chip {
+    @apply rounded-full border border-border bg-white/60 px-3.5 py-1.5 text-sm font-medium text-inkMuted
+           data-[active=true]:border-accent data-[active=true]:bg-accentSoft data-[active=true]:text-ink
+           hover:border-borderDark transition-all;
+  }
+
+  /* ── Onboarding ── */
+  .onboarding-label {
+    @apply block font-sans text-xs font-semibold uppercase tracking-[0.14em] text-inkMuted mb-2;
+  }
+  .onboarding-input {
+    @apply w-full rounded-2xl border border-border bg-white/80 px-5 py-4
+           font-sans text-lg text-ink placeholder:text-inkFaint
+           shadow-sm focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15 transition-all;
+  }
+  .onboarding-cta {
+    @apply w-full rounded-2xl bg-accent py-4 px-6 font-sans text-base font-semibold text-white
+           shadow-soft hover:bg-accentDeep active:scale-[0.99] transition-all;
+  }
+  .onboarding-chip {
+    @apply rounded-full border border-border bg-white/70 px-4 py-3 text-left text-sm font-medium text-ink leading-snug
+           data-[active=true]:border-accent data-[active=true]:bg-accentSoft data-[active=true]:text-ink
+           shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .onboarding-card {
+    @apply w-full text-left rounded-2xl border border-border bg-white/70 p-6 shadow-sm transition-all hover:border-borderDark;
+  }
+  .onboarding-card--on {
+    @apply border-accent bg-accentSoft/50 ring-2 ring-accent/20;
+  }
+
+  /* ── Section card ── */
+  .surface {
+    @apply rounded-3xl border border-border bg-white/60 shadow-card backdrop-blur-sm;
+  }
+}
