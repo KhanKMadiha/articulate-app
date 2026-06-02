@@ -206,7 +206,7 @@ app.post("/api/generate-passage", async (req, res) => {
     dyslexiaMode: Boolean(dyslexiaMode),
   });
 
-  const userMessage = `Generate today's passage. Theme to emphasize: ${theme}.`;
+  const userMessage = `Generate today's passage. Theme to emphasise: ${theme}.`;
 
   try {
     const message = await anthropic.messages.create({
