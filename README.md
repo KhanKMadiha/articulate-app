@@ -2,7 +2,7 @@
 
 **[Try it live →](https://articulate-app-production.up.railway.app)** · **[GitHub](https://github.com/KhanKMadiha/articulate-app)** · **[Portfolio](https://madihaintech.me)**
 
-A daily reading practice app for professionals who want to speak with more confidence. Articulate generates a personalised passage every day using AI, tailored to your career goals and how you want to sound — then lets you record yourself and get scored on accuracy, fluency, and pace.
+A daily reading practice app for professionals who want to speak with more confidence. Articulate generates a personalised passage every day using AI, tailored to your career goals and how you want to sound, then lets you record yourself and get scored on accuracy, fluency, and pace.
 
 Built as a full-stack PWA with React, Express, and the Anthropic Claude API. Documentation uses British English (e.g. personalised, favourite, practise, licence).
 
@@ -29,6 +29,18 @@ Most of us know what we want to say. The gap is how we say it — the confidence
 - **Daily habit** — streak tracking, a motivational moment after each session, optional push notification reminders
 - **Two flows** — jump straight to your passage, or do a quick energy and theme check-in first
 - **Library** — save favourite passages for a second read or rehearsal before a big moment
+
+---
+
+## Screenshots
+
+| Onboarding | Personalisation | Daily home |
+|---|---|---|
+| ![Onboarding](screenshots/01-onboarding.png) | ![Focus areas](screenshots/02-focus-areas.png) | ![Home](screenshots/04-home.png) |
+
+| Passage with recording | Dyslexia mode | Session complete |
+|---|---|---|
+| ![Passage](screenshots/05-passage.png) | ![Dyslexia](screenshots/07-dyslexia-mode.png) | ![Complete](screenshots/06-see-you-tomorrow.png) |
 
 ---
 
