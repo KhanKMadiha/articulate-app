@@ -5,9 +5,9 @@ import { requestAndSubscribe, unsubscribe } from "../lib/notifications.js";
 import SpeakerInput from "../components/SpeakerInput.jsx";
 
 const SUGGESTED_SPEAKERS = [
-  "Codie Sanchez", "Bahja Abdi", "Simon Sinek", "Brené Brown",
-  "Barack Obama", "Oprah Winfrey", "Malcolm Gladwell", "Gary Vaynerchuk",
-  "Michelle Obama", "Trevor Noah",
+  "Codie Sanchez", "Bahja Abdi", "Mira Murati", "Daniela Amodei",
+  "Emma Grede", "Brené Brown", "Barack Obama", "Michelle Obama",
+  "Oprah Winfrey", "Simon Sinek",
 ];
 
 function SegmentedControl({ options, value, onChange, className = "" }) {
@@ -202,7 +202,7 @@ export default function Settings({ onSaved }) {
             ))}
             <SpeakerInput
               selected={speakingInspirations}
-              onAdd={(name) => setSpeakingInspirations((p) => [...p, name])}
+              onAdd={(name) => setSpeakingInspirations((p) => p.length < 3 ? [...p, name] : p)}
             />
           </div>
         </section>

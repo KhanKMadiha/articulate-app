@@ -6,12 +6,13 @@ export const ALL_SPEAKERS = [
   "Patty McCord", "Kim Scott", "Liz Wiseman", "Roger Martin", "A.G. Lafley",
   "Ray Dalio", "Sara Blakely", "Arianna Huffington", "Melinda Gates", "Jacinda Ardern",
   // Tech
-  "Sam Altman", "Jensen Huang", "Sundar Pichai", "Mustafa Suleyman", "Demis Hassabis",
-  "Andrew Ng", "Lex Fridman", "Anjali Sud", "Kelsey Hightower", "Charity Majors",
+  "Sam Altman", "Jensen Huang", "Sundar Pichai", "Mira Murati", "Daniela Amodei",
+  "Mustafa Suleyman", "Demis Hassabis", "Fei-Fei Li", "Andrew Ng", "Anjali Sud",
+  "Kelsey Hightower", "Charity Majors", "Kara Swisher",
   "Will Larson", "Patrick Collison", "Tobias Lütke", "Ev Williams", "Jessica Livingston",
   // Motivation & presence
   "Codie Sanchez", "Bahja Abdi", "Brené Brown", "Tony Robbins", "Amy Cuddy",
-  "Robin Sharma", "Jay Shetty", "Lisa Nichols", "Mel Robbins", "Matthew McConaughey",
+  "Emma Grede", "Robin Sharma", "Jay Shetty", "Lisa Nichols", "Mel Robbins", "Reshma Saujani",
   // Politics & public speaking
   "Barack Obama", "Michelle Obama", "Justin Trudeau", "Angela Merkel", "Nelson Mandela",
   "Hillary Clinton", "Kamala Harris", "Alexandria Ocasio-Cortez", "Malala Yousafzai",

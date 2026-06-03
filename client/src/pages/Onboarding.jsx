@@ -9,8 +9,8 @@ const TOTAL = 7;
 // Speakers mapped to each focus area — shown contextually on step 4
 const SPEAKERS_BY_FOCUS = {
   "Executive communication":       ["Satya Nadella", "Sheryl Sandberg", "Indra Nooyi", "Oprah Winfrey", "Barack Obama", "Tim Cook", "Mary Barra"],
-  "AI & tech fluency":             ["Sam Altman", "Jensen Huang", "Sundar Pichai", "Lex Fridman", "Mustafa Suleyman", "Demis Hassabis", "Andrew Ng"],
-  "Confidence & presence":         ["Codie Sanchez", "Bahja Abdi", "Brené Brown", "Tony Robbins", "Michelle Obama", "Trevor Noah", "Amy Cuddy"],
+  "AI & tech fluency":             ["Sam Altman", "Jensen Huang", "Mira Murati", "Daniela Amodei", "Fei-Fei Li", "Sundar Pichai", "Mustafa Suleyman"],
+  "Confidence & presence":         ["Codie Sanchez", "Bahja Abdi", "Emma Grede", "Brené Brown", "Michelle Obama", "Amy Cuddy", "Tony Robbins"],
   "Managing upwards":              ["Sheryl Sandberg", "Adam Grant", "Simon Sinek", "Patty McCord", "Kim Scott", "Anne Morriss", "Liz Wiseman"],
   "Storytelling with data":        ["Malcolm Gladwell", "Hans Rosling", "Brené Brown", "Scott Galloway", "Nneka Ogwumike", "Steven Levitt", "Dan Roam"],
   "Technical leadership":          ["Jensen Huang", "Satya Nadella", "Sam Altman", "Anjali Sud", "Kelsey Hightower", "Will Larson", "Charity Majors"],
@@ -250,7 +250,7 @@ export default function Onboarding({ onComplete }) {
               ))}
               <SpeakerInput
                 selected={speakingInspirations}
-                onAdd={(name) => setSpeakingInspirations((p) => [...p, name])}
+                onAdd={(name) => setSpeakingInspirations((p) => p.length < 3 ? [...p, name] : p)}
               />
             </div>
             <div className="min-h-[2rem]" />
