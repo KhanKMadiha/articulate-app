@@ -36,13 +36,29 @@ Most of us know what we want to say. The gap is how we say it — the confidence
 
 ## Screenshots
 
-| Onboarding | Personalisation | Daily home |
-|---|---|---|
-| ![Onboarding](screenshots/01-onboarding.png) | ![Focus areas](screenshots/02-focus-areas.png) | ![Home](screenshots/04-home.png) |
+### Onboarding
 
-| Passage with recording | Dyslexia mode | Session complete |
-|---|---|---|
-| ![Passage](screenshots/05-passage.png) | ![Dyslexia](screenshots/07-dyslexia-mode.png) | ![Complete](screenshots/06-see-you-tomorrow.png) |
+![Onboarding](screenshots/01-onboarding.png)
+
+### Personalisation
+
+![Focus areas](screenshots/02-focus-areas.png)
+
+### Daily home
+
+![Home](screenshots/04-home.png)
+
+### Passage with recording
+
+![Passage](screenshots/05-passage.png)
+
+### Dyslexia mode
+
+![Dyslexia](screenshots/07-dyslexia-mode.png)
+
+### Session complete
+
+![Complete](screenshots/06-see-you-tomorrow.png)
 
 ---
 
@@ -193,14 +209,6 @@ Run from the **repo root**:
 - [Vite PWA Plugin](https://vite-pwa-org.netlify.app/) — service worker and installable PWA
 - [web-push](https://github.com/web-push-libs/web-push) — Web Push notifications
 - [Railway](https://railway.app) — hosting
-
----
-
-## Links
-
-- **Live demo:** [articulate-app-production.up.railway.app](https://articulate-app-production.up.railway.app)
-- **Source:** [github.com/KhanKMadiha/articulate-app](https://github.com/KhanKMadiha/articulate-app)
-- **Portfolio:** [madihaintech.me](https://madihaintech.me)
 
 ---
 
