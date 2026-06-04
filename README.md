@@ -14,7 +14,7 @@ A senior engineering manager told me something that stuck with me:
 
 > "You need to learn how to speak different languages. To customers, to engineers, to execs. They all need something different."
 
-Most of us know what we want to say. The gap is how we say it — the confidence, the clarity, the delivery. Articulate is the daily practice app that closes that gap. 
+Most of us know what we want to say. The gap is how we say it. The confidence, the clarity, the delivery. Articulate is the daily practice app that closes that gap. 
 
 ---
 
