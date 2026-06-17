@@ -19,7 +19,7 @@ const SPEAKERS_BY_FOCUS = {
 };
 
 const FALLBACK_SPEAKERS = [
-  "Codie Sanchez", "Bahja Abdi", "Simon Sinek", "Brené Brown",
+  "Codie Sanchez", "Bahja Abdi", "Mira Murati", "Daniela Amodei", "Simon Sinek", "Brené Brown",
   "Barack Obama", "Malcolm Gladwell", "Oprah Winfrey", "Michelle Obama", "Trevor Noah",
 ];
 
