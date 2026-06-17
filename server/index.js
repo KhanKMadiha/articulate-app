@@ -210,7 +210,7 @@ app.post("/api/generate-passage", async (req, res) => {
 
   try {
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 8192,
       system,
       messages: [{ role: "user", content: userMessage }],
@@ -322,7 +322,7 @@ Respond with ONLY this JSON (no markdown, no commentary):
 
   try {
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 1024,
       system: "You are a speech coach evaluating a professional reading a passage aloud. Be encouraging but honest and specific.",
       messages: [{ role: "user", content: userMessage }],
