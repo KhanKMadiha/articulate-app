@@ -162,6 +162,7 @@ export default function Read() {
           date: dateKey,
           passageTitle: passage.title,
           passageTheme: passage.theme,
+          readTimeMinutes: passage.readTimeMinutes,
           scores: result.scores,
           feedback: result.feedback,
           recordedAt: new Date().toISOString(),

@@ -2,22 +2,42 @@ import { useMemo, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { MOODS, THEMES, PASSAGE_LENGTH_MINUTES } from "../lib/constants.js";
 import { generatePassage } from "../lib/api.js";
-import { clearSession, loadSession, saveSession } from "../lib/storage.js";
+import { clearSession, loadScores, loadSession, saveSession } from "../lib/storage.js";
 import { todayKey } from "../lib/dates.js";
 import { requestAndSubscribe } from "../lib/notifications.js";
 
-function readInitialFromSession() {
-  const s = loadSession();
-  const dk = todayKey();
-  if (s?.dateKey !== dk || !s?.passage) {
+const DAY_MS = 86_400_000;
+
+// Same UTC-based format as todayKey(), offset by whole days from now
+function dayKeyFromToday(offsetDays) {
+  return new Date(Date.now() + offsetDays * DAY_MS).toISOString().slice(0, 10);
+}
+
+/** "fresh" = no passage for today, "inProgress" = passage not finished, "done" = marked as read. */
+function getDayState(session, dk) {
+  if (session?.dateKey !== dk || !session?.passage) return "fresh";
+  return session.completedToday ? "done" : "inProgress";
+}
+
+function readInitialFromSession(session, dk) {
+  if (getDayState(session, dk) === "fresh") {
     return { mood: "focused", themeMode: "surprise", themePick: THEMES[0] };
   }
   return {
-    mood: s.mood || "focused",
-    themeMode: s.themeMode || "surprise",
-    themePick: s.themePick && THEMES.includes(s.themePick) ? s.themePick : THEMES[0],
-    hasPassage: true,
+    mood: session.mood || "focused",
+    themeMode: session.themeMode || "surprise",
+    themePick: session.themePick && THEMES.includes(session.themePick) ? session.themePick : THEMES[0],
   };
+}
+
+/** Yesterday's passage theme + length, from the tab session or the saved score history. */
+function getYesterday(session) {
+  const yk = dayKeyFromToday(-1);
+  if (session?.dateKey === yk && session.passage?.theme) {
+    return { theme: session.passage.theme, minutes: session.passage.readTimeMinutes };
+  }
+  const score = loadScores().find((s) => s.kind !== "pitch" && s.date === yk && s.passageTheme);
+  return score ? { theme: score.passageTheme, minutes: score.readTimeMinutes } : null;
 }
 
 function LoadingScreen() {
@@ -37,11 +57,60 @@ function LoadingScreen() {
   );
 }
 
-export default function Home() {
-  const { profile } = useOutletContext();
-  const navigate = useNavigate();
-  const init = useMemo(() => readInitialFromSession(), []);
+function WeekStrip({ readDates }) {
+  const mondayOffset = -((new Date().getDay() + 6) % 7);
+  const read = new Set(readDates);
+  const days = ["M", "T", "W", "T", "F", "S", "S"].map((label, i) => {
+    const key = dayKeyFromToday(mondayOffset + i);
+    return { label, key, isToday: mondayOffset + i === 0, isRead: read.has(key) };
+  });
+  return (
+    <div className="flex items-center gap-3 pt-3" role="list" aria-label="This week">
+      {days.map((d) => (
+        <div
+          key={d.key}
+          role="listitem"
+          className="flex flex-col items-center gap-1"
+          aria-label={`${d.key}${d.isRead ? ", practised" : ""}${d.isToday ? ", today" : ""}`}
+        >
+          <span
+            className={`w-2.5 h-2.5 rounded-full ${
+              d.isRead ? "bg-accent" : d.isToday ? "border-[1.5px] border-accent" : "bg-border"
+            }`}
+          />
+          <span className={`font-sans text-[10px] ${d.isToday ? "text-ink font-semibold" : "text-inkFaint"}`}>
+            {d.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.8} stroke="currentColor" className="w-4 h-4" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+    </svg>
+  );
+}
+
+function SectionLabel({ children }) {
+  return (
+    <p className="font-sans text-xs uppercase tracking-[0.14em] text-inkFaint font-medium">{children}</p>
+  );
+}
+
+export default function Home() {
+  const { profile, readDates } = useOutletContext();
+  const navigate = useNavigate();
+  const dateKey = todayKey();
+
+  const session = useMemo(() => loadSession(), []);
+  const init = useMemo(() => readInitialFromSession(session, dateKey), [session, dateKey]);
+  const yesterday = useMemo(() => getYesterday(session), [session]);
+
+  const [dayState, setDayState] = useState(() => getDayState(session, dateKey));
   const [mood, setMood] = useState(init.mood);
   const [themeMode, setThemeMode] = useState(init.themeMode);
   const [themePick, setThemePick] = useState(init.themePick);
@@ -63,13 +132,15 @@ export default function Home() {
   const reminderAlreadyGranted = notificationsSupported && Notification.permission === "granted";
   const showReminderPrompt = notificationsSupported && !reminderAlreadyGranted && reminderStatus !== "on";
 
-  const dateKey = todayKey();
   const checkinFirst = profile.readingStyle === "checkin";
   const targetReadMinutes = PASSAGE_LENGTH_MINUTES[profile.passageLength] ?? 4;
   const moodLabel = useMemo(() => MOODS.find((m) => m.id === mood)?.label || mood, [mood]);
   const today = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const todaysPassage = dayState === "fresh" ? null : session?.passage;
 
   const handleGenerate = async () => {
+    // Only generate when there's no passage for today (Start fresh / Read another reset to "fresh")
+    if (dayState !== "fresh") return;
     setError("");
     setLoading(true);
     try {
@@ -96,6 +167,20 @@ export default function Home() {
     }
   };
 
+  const resetToFresh = () => {
+    clearSession();
+    setDayState("fresh");
+    setMood("focused");
+    setThemeMode("surprise");
+    setThemePick(THEMES[0]);
+    setError("");
+  };
+
+  const handleStartFresh = () => {
+    if (!window.confirm("Start fresh? Today's passage will be replaced with a new one.")) return;
+    resetToFresh();
+  };
+
   const handleSetReminder = async () => {
     setReminderStatus("loading");
     setReminderError("");
@@ -113,6 +198,37 @@ export default function Home() {
 
   const firstName = profile.name.split(" ")[0];
 
+  const speakLike = allInspirations.length > 0 && (
+    <div className="space-y-2">
+      <SectionLabel>Speak like</SectionLabel>
+      <div className="flex flex-wrap gap-2">
+        {allInspirations.map((name) => (
+          <button
+            key={name}
+            type="button"
+            data-active={selectedInspirations.includes(name)}
+            className="chip text-xs py-1.5 px-3.5"
+            onClick={() => toggleInspiration(name)}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const pitchDescription = profile.targetRole
+    ? `Role-play a real scenario and learn to sound like you already work in ${profile.targetRole}.`
+    : "Role-play a sales scenario in your own words and get coached on it.";
+
+  const subline = {
+    fresh: checkinFirst
+      ? "A quick check-in, then today's passage."
+      : `Ready when you are. ~${targetReadMinutes} min, tailored to you.`,
+    inProgress: "Your passage is waiting where you left it.",
+    done: "Today's reading is done. Keep the momentum with a pitch.",
+  }[dayState];
+
   return (
     <div className="flex-1 flex flex-col animate-fade-up">
       <div className="flex-1 flex flex-col surface p-6 sm:p-8 gap-7">
@@ -121,45 +237,18 @@ export default function Home() {
         <div className="space-y-1">
           <p className="font-sans text-xs uppercase tracking-[0.2em] text-inkFaint">{today}</p>
           <h1 className="font-serif text-3xl text-ink leading-tight">Hello, {firstName}</h1>
-          <p className="font-sans text-sm text-inkMuted leading-relaxed">
-            {checkinFirst
-              ? "A quick check-in, then today's passage."
-              : `Ready when you are. ~${targetReadMinutes} min, tailored to you.`}
-          </p>
+          <p className="font-sans text-sm text-inkMuted leading-relaxed">{subline}</p>
+          <WeekStrip readDates={readDates} />
         </div>
-
-        {/* Inspiration picker */}
-        {allInspirations.length > 0 && (
-          <div className="space-y-2">
-            <p className="font-sans text-xs uppercase tracking-[0.14em] text-inkFaint font-medium">
-              Channel today
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {allInspirations.map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  data-active={selectedInspirations.includes(name)}
-                  className="chip text-xs py-1.5 px-3.5"
-                  onClick={() => toggleInspiration(name)}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="h-px bg-border" />
 
-        {/* Check-in area */}
-        {checkinFirst ? (
+        {/* Fresh: check-in or preview card */}
+        {dayState === "fresh" && (checkinFirst ? (
           <div className="flex-1 flex flex-col gap-5">
             {/* Mood */}
             <div className="space-y-2.5">
-              <p className="font-sans text-xs uppercase tracking-[0.14em] text-inkFaint font-medium">
-                How's your energy?
-              </p>
+              <SectionLabel>How's your energy?</SectionLabel>
               <div className="flex rounded-xl border border-border bg-white/50 p-1 gap-0.5">
                 {MOODS.map((m) => (
                   <button
@@ -183,9 +272,7 @@ export default function Home() {
 
             {/* Theme */}
             <div className="space-y-2.5">
-              <p className="font-sans text-xs uppercase tracking-[0.14em] text-inkFaint font-medium">
-                Theme
-              </p>
+              <SectionLabel>Theme</SectionLabel>
               <div className="flex rounded-xl border border-border bg-white/50 p-1 gap-0.5">
                 <button
                   type="button"
@@ -220,30 +307,68 @@ export default function Home() {
                 </select>
               )}
             </div>
+
+            {speakLike}
           </div>
         ) : (
           /* Direct flow — preview card */
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="rounded-2xl border border-border bg-white/40 px-5 py-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="font-sans text-xs uppercase tracking-[0.14em] text-inkFaint font-medium">
-                  Today's passage
+          <div className="rounded-2xl border border-border bg-white/40 px-5 py-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <SectionLabel>Today's passage</SectionLabel>
+              <span className="font-sans text-xs text-inkMuted bg-white/70 border border-border rounded-full px-2.5 py-0.5">
+                ~{targetReadMinutes} min
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-inkMuted">
+                <span className="w-1 h-1 rounded-full bg-accent/50 shrink-0" />
+                <p className="font-sans text-sm">
+                  {yesterday
+                    ? `Yesterday: ${yesterday.theme}${yesterday.minutes ? ` · ${yesterday.minutes} min` : ""}`
+                    : "Surprise theme, chosen for you"}
                 </p>
-                <span className="font-sans text-xs text-inkMuted bg-white/70 border border-border rounded-full px-2.5 py-0.5">
-                  ~{targetReadMinutes} min
-                </span>
               </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2 text-inkMuted">
-                  <span className="w-1 h-1 rounded-full bg-accent/50 shrink-0" />
-                  <p className="font-sans text-sm">Surprise theme, chosen for you</p>
-                </div>
-                <div className="flex items-center gap-2 text-inkMuted">
-                  <span className="w-1 h-1 rounded-full bg-accent/50 shrink-0" />
-                  <p className="font-sans text-sm">Written around your goals and profile</p>
-                </div>
+              <div className="flex items-center gap-2 text-inkMuted">
+                <span className="w-1 h-1 rounded-full bg-accent/50 shrink-0" />
+                <p className="font-sans text-sm">Written around your goals and profile</p>
               </div>
             </div>
+            {speakLike && <div className="border-t border-border pt-4">{speakLike}</div>}
+          </div>
+        ))}
+
+        {/* In progress: today's passage */}
+        {dayState === "inProgress" && todaysPassage && (
+          <div className="rounded-2xl border border-border bg-white/40 px-5 py-5 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-sans text-xs uppercase tracking-[0.14em] text-accent font-medium truncate">
+                {todaysPassage.theme}
+              </p>
+              <span className="shrink-0 font-sans text-xs text-inkMuted bg-white/70 border border-border rounded-full px-2.5 py-0.5">
+                ~{todaysPassage.readTimeMinutes} min
+              </span>
+            </div>
+            <p className="font-serif text-xl text-ink leading-snug">{todaysPassage.title}</p>
+          </div>
+        )}
+
+        {/* Done: read note + pitch as the main action */}
+        {dayState === "done" && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-accent/30 bg-accentSoft/40 px-5 py-4">
+              <p className="font-sans text-sm font-semibold text-ink">You&apos;ve read today ✓</p>
+              {todaysPassage?.title && (
+                <p className="font-sans text-xs text-inkMuted mt-0.5">{todaysPassage.title}</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/pitch")}
+              className="w-full rounded-2xl bg-accent px-5 py-5 text-left shadow-sm hover:bg-accentDeep transition-colors"
+            >
+              <p className="font-serif text-xl text-white">Practise a pitch →</p>
+              <p className="font-sans text-sm text-white/85 mt-1 leading-relaxed">{pitchDescription}</p>
+            </button>
           </div>
         )}
 
@@ -286,12 +411,10 @@ export default function Home() {
             <button
               type="button"
               onClick={() => setReminderExpanded(true)}
-              className="flex items-center gap-2 text-left group"
+              className="flex items-center gap-2 text-left text-inkFaint hover:text-inkMuted transition-colors"
             >
-              <span className="text-inkFaint text-base leading-none">🔔</span>
-              <span className="font-sans text-sm text-inkFaint group-hover:text-inkMuted transition-colors">
-                Set a daily reminder
-              </span>
+              <BellIcon />
+              <span className="font-sans text-sm">Set a daily reminder</span>
             </button>
           )
         )}
@@ -307,44 +430,49 @@ export default function Home() {
 
         {/* CTA */}
         <div className="space-y-3">
-          <button type="button" className="btn-primary w-full py-4 text-base" onClick={handleGenerate}>
-            {checkinFirst ? "Generate today's passage" : "Open today's passage"}
-          </button>
+          {dayState === "fresh" && (
+            <button type="button" className="btn-primary w-full py-4 text-base" onClick={handleGenerate}>
+              {checkinFirst ? "Generate today's passage" : "Open today's passage"}
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={() => navigate("/pitch")}
-            className="w-full rounded-2xl border border-border bg-white/40 px-5 py-4 text-left hover:border-accent/40 transition-colors"
-          >
-            <p className="font-sans text-sm font-semibold text-ink">Practise a pitch →</p>
-            <p className="font-sans text-xs text-inkMuted mt-0.5">
-              {profile.targetRole
-                ? `Role-play a real scenario and learn to sound like you already work in ${profile.targetRole}.`
-                : "Role-play a sales scenario in your own words and get coached on it."}
-            </p>
-          </button>
+          {dayState === "inProgress" && (
+            <button type="button" className="btn-primary w-full py-4 text-base" onClick={() => navigate("/read")}>
+              Continue reading
+            </button>
+          )}
 
-          {init.hasPassage && (
-            <div className="flex items-center justify-between px-1">
+          {dayState !== "done" && (
+            <button
+              type="button"
+              onClick={() => navigate("/pitch")}
+              className="w-full rounded-2xl border border-border bg-white/40 px-5 py-4 text-left hover:border-accent/40 transition-colors"
+            >
+              <p className="font-sans text-sm font-semibold text-ink">Practise a pitch →</p>
+              <p className="font-sans text-xs text-inkMuted mt-0.5">{pitchDescription}</p>
+            </button>
+          )}
+
+          {dayState === "inProgress" && (
+            <div className="flex justify-end px-1">
               <button
                 type="button"
-                onClick={() => navigate("/read")}
-                className="font-sans text-sm text-inkMuted hover:text-accent transition-colors"
-              >
-                Continue today's passage →
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  clearSession();
-                  setMood("focused");
-                  setThemeMode("surprise");
-                  setThemePick(THEMES[0]);
-                  setError("");
-                }}
+                onClick={handleStartFresh}
                 className="font-sans text-sm text-inkFaint hover:text-inkMuted transition-colors"
               >
                 Start fresh
+              </button>
+            </div>
+          )}
+
+          {dayState === "done" && (
+            <div className="flex justify-center px-1">
+              <button
+                type="button"
+                onClick={resetToFresh}
+                className="font-sans text-sm text-inkMuted hover:text-accent transition-colors"
+              >
+                Read another
               </button>
             </div>
           )}
