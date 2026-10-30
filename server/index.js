@@ -96,7 +96,46 @@ const THEMES = [
   "Technical leadership",
   "Strategic thinking",
   "Influencing without authority",
+  "Pitching & persuasion",
 ];
+
+function pivotBlock(currentRole, targetRole) {
+  if (!targetRole) return "";
+  const isSales = /sales|account exec|\bae\b|\bsdr\b|\bbdr\b|business development|customer success|solutions? (engineer|consult)/i.test(targetRole);
+  const salesLines = isSales
+    ? `
+- Write it as something a strong ${targetRole} in tech would actually say out loud: a pitch, a discovery call opener, a talk track for handling an objection, or a pep talk to their team before a quarter close.
+- Use real tech sales vocabulary naturally, never as a glossary: discovery, pain, business case, champion, decision maker, pipeline, next steps, ROI, time to value. Show the buyer's problem first, the product second.
+- Model good sales habits in the text: asking sharp questions, quantifying impact, naming a clear next step, and confident language with no hedging ("I just wanted to", "sort of", "maybe").`
+    : "";
+  return `
+CAREER PIVOT: This person is moving from ${currentRole} into ${targetRole}. The passage should train them to sound like an experienced ${targetRole}: the vocabulary, the rhythm, the confidence. Where it fits, show how experience from ${currentRole} becomes an advantage in ${targetRole}.${salesLines}`;
+}
+
+/** Calls Claude and parses a single JSON object from the reply. Throws { status, message } on failure. */
+async function askClaudeForJSON({ system, userMessage, maxTokens }) {
+  const message = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: maxTokens,
+    system,
+    messages: [{ role: "user", content: userMessage }],
+  });
+  const textBlock = message.content.find((b) => b.type === "text");
+  if (!textBlock) throw Object.assign(new Error("Unexpected model response."), { status: 502 });
+  let raw = textBlock.text.trim();
+  if (raw.startsWith("```")) raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw Object.assign(new Error("Model returned non-JSON. Try again."), { status: 502 });
+  }
+}
+
+function sendError(res, err, fallback) {
+  console.error(err);
+  const status = err.status || 500;
+  return res.status(status >= 400 && status < 600 ? status : 500).json({ error: err.message || fallback });
+}
 
 function lengthBlock(minutes) {
   const m = Number(minutes) || 4;
@@ -119,6 +158,7 @@ function buildSystemPrompt({
   theme,
   targetReadMinutes,
   dyslexiaMode,
+  targetRole,
 }) {
   const topicsStr = Array.isArray(topics) ? topics.join(", ") : String(topics || "");
   const inspirationList = Array.isArray(inspirations) && inspirations.length > 0
@@ -146,6 +186,7 @@ ${len}
 ${dyslexiaBlock}
 WHO THIS IS FOR: ${r} working in ${ind}. Their goal: ${g}. Topics they care about: ${t}.
 Today's energy: ${moodLine}. Theme: ${th}.
+${pivotBlock(r, targetRole)}
 
 SPEAKING INSPIRATIONS: ${inspirationList.join(", ")}
 Study how these speakers communicate and channel their energy. Consider their rhythm, directness, storytelling style, and the way they make ideas feel immediate and personal.
@@ -184,6 +225,7 @@ app.post("/api/generate-passage", async (req, res) => {
     surprise,
     targetReadMinutes: rawMinutes,
     dyslexiaMode,
+    targetRole,
   } = req.body || {};
 
   const targetReadMinutes =
@@ -204,6 +246,7 @@ app.post("/api/generate-passage", async (req, res) => {
     theme,
     targetReadMinutes,
     dyslexiaMode: Boolean(dyslexiaMode),
+    targetRole: typeof targetRole === "string" ? targetRole.trim() : "",
   });
 
   const userMessage = `Generate today's passage. Theme to emphasise: ${theme}.`;
@@ -351,6 +394,134 @@ Respond with ONLY this JSON (no markdown, no commentary):
     return res.status(status >= 400 && status < 600 ? status : 500).json({
       error: err.message || "Scoring failed.",
     });
+  }
+});
+
+const PITCH_SCENARIOS = {
+  "Elevator pitch":        "A 60-second pitch to a senior buyer you meet by chance. Hook, problem, value, ask.",
+  "Cold call opener":      "The first 45 seconds of a cold call. Earn the right to keep talking and book a meeting.",
+  "Discovery call":        "Open a first meeting, set the agenda, and ask questions that uncover pain and impact.",
+  "Product demo":          "Introduce a demo by tying it to the buyer's specific problems before showing anything.",
+  "Handling an objection": "The buyer raises a hard objection. Acknowledge, explore, reframe, and move forward.",
+  "Closing next steps":    "End a strong meeting by summarising value and securing a concrete next step.",
+};
+
+app.post("/api/generate-pitch", async (req, res) => {
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server misconfiguration: ANTHROPIC_API_KEY is not set." });
+  }
+
+  const { role, industry, targetRole, scenarioType, product } = req.body || {};
+  const type = PITCH_SCENARIOS[scenarioType] ? scenarioType : "Elevator pitch";
+  const target = targetRole || "Account Executive in tech sales";
+
+  const system = `You are a top-performing tech sales leader who coaches career changers breaking into ${target}. You design realistic role-play scenarios that feel like a real day in a B2B tech sales job.`;
+
+  const userMessage = `Create one practice scenario.
+
+LEARNER: Currently ${role || "a professional"} in ${industry || "their field"}, pivoting into ${target}.
+SCENARIO TYPE: ${type} — ${PITCH_SCENARIOS[type]}
+WHAT THEY SELL: ${product ? product : "Invent a believable B2B SaaS product (not a famous brand). Make it specific."}
+
+Rules:
+- The buyer is a realistic persona with a real-sounding (fictional) company, a specific business problem, and numbers where it helps.
+- beats are the 3 to 4 moves the learner should hit, in order, written as short instructions.
+- phrasesToTry are 3 short, natural lines a strong rep would actually say in this moment. Not cheesy, not scripted-sounding.
+- likelyObjection is one realistic pushback this buyer would give.
+- If the learner's current background gives them credibility with this buyer, mention how to use it in "yourEdge". Otherwise give a general confidence tip.
+- No em dashes.
+
+Respond with ONLY this JSON (no markdown, no commentary):
+{
+  "title": "<short title>",
+  "scenarioType": "${type}",
+  "buyer": { "name": "<first and last name>", "title": "<job title>", "company": "<company>", "companyDescription": "<one line>" },
+  "situation": "<2-3 sentences setting the scene>",
+  "product": "<one line: what you sell and the core value>",
+  "goal": "<one line: what success looks like for this pitch>",
+  "likelyObjection": "<one line>",
+  "beats": ["<beat>", "<beat>", "<beat>"],
+  "phrasesToTry": ["<phrase>", "<phrase>", "<phrase>"],
+  "yourEdge": "<one sentence>",
+  "timeLimitSeconds": <45-120>
+}`;
+
+  try {
+    const scenario = await askClaudeForJSON({ system, userMessage, maxTokens: 2048 });
+    if (!scenario.title || !scenario.buyer || !scenario.situation) {
+      return res.status(502).json({ error: "Incomplete scenario payload from model." });
+    }
+    return res.json({ ...scenario, scenarioType: type });
+  } catch (err) {
+    return sendError(res, err, "Scenario generation failed.");
+  }
+});
+
+app.post("/api/score-pitch", async (req, res) => {
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server misconfiguration: ANTHROPIC_API_KEY is not set." });
+  }
+
+  const { scenario, transcript, durationSeconds, targetRole } = req.body || {};
+  if (!scenario || !transcript) {
+    return res.status(400).json({ error: "scenario and transcript are required." });
+  }
+
+  const actualSecs = Math.round(Number(durationSeconds) || 0);
+  const target = targetRole || "Account Executive in tech sales";
+
+  const userMessage = `A career changer pivoting into ${target} just delivered this pitch out loud in a role-play. Coach them.
+
+SCENARIO:
+${JSON.stringify(scenario, null, 2)}
+
+THEIR PITCH (speech-to-text, so ignore punctuation and small transcription errors):
+"""
+${transcript}
+"""
+${actualSecs > 0 ? `\nThey spoke for ${actualSecs}s. Target was about ${scenario.timeLimitSeconds || 60}s.` : ""}
+
+Score each dimension 1–10:
+- structure: Did they hit the beats in a logical order and finish with a clear ask or next step?
+- valueFocus: Did they lead with the buyer's problem and business impact rather than product features?
+- salesLanguage: Do they sound like an experienced tech seller? Confident, specific, natural use of sales vocabulary, good questions.
+- confidence: Filler words, hedging ("I just wanted to", "sort of", "maybe", "sorry"), rambling, and length vs the target all count against this.
+- overall: Holistic. Would this get a second meeting?
+
+Then:
+- swaps: up to 3 things they actually said that weakened them, each with a stronger alternative. Quote them closely. If nothing weak, return an empty array.
+- strongerVersion: rewrite their pitch as a strong ${target} would say it, about 80–130 words, keeping their ideas and facts. Written for the voice, so they can read it aloud to practise. No em dashes.
+
+Respond with ONLY this JSON (no markdown, no commentary):
+{
+  "scores": { "structure": <1-10>, "valueFocus": <1-10>, "salesLanguage": <1-10>, "confidence": <1-10>, "overall": <1-10> },
+  "feedback": {
+    "structure": "<1-2 specific sentences>",
+    "valueFocus": "<1-2 specific sentences>",
+    "salesLanguage": "<1-2 specific sentences>",
+    "confidence": "<1-2 specific sentences>",
+    "summary": "<2-3 sentences with the single most important thing to work on next>"
+  },
+  "swaps": [{ "from": "<what they said>", "to": "<stronger line>" }],
+  "strongerVersion": "<text>"
+}`;
+
+  try {
+    const parsed = await askClaudeForJSON({
+      system: "You are a tech sales coach who helps career changers sound like seasoned sellers. Be encouraging but honest, specific, and practical.",
+      userMessage,
+      maxTokens: 2048,
+    });
+    const { scores, feedback, swaps, strongerVersion } = parsed;
+    if (!scores || !feedback) return res.status(502).json({ error: "Incomplete score payload." });
+    return res.json({
+      scores,
+      feedback,
+      swaps: Array.isArray(swaps) ? swaps.slice(0, 3) : [],
+      strongerVersion: strongerVersion ? String(strongerVersion) : "",
+    });
+  } catch (err) {
+    return sendError(res, err, "Pitch scoring failed.");
   }
 });
 

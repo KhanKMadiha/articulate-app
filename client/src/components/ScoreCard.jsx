@@ -1,3 +1,5 @@
+import { READING_DIMENSIONS } from "../lib/constants.js";
+
 function scoreColor(n) {
   if (n >= 8) return "text-emerald-700 bg-emerald-50 border-emerald-200";
   if (n >= 6) return "text-amber-700 bg-amber-50 border-amber-200";
@@ -33,7 +35,7 @@ function FeedbackRow({ label, score, text }) {
   );
 }
 
-export default function ScoreCard({ scores, feedback, onRecordAgain }) {
+export default function ScoreCard({ scores, feedback, onRecordAgain, dimensions = READING_DIMENSIONS }) {
   return (
     <div className="rounded-2xl border border-border bg-white/60 p-6 shadow-soft space-y-6">
       {/* Header row */}
@@ -43,9 +45,9 @@ export default function ScoreCard({ scores, feedback, onRecordAgain }) {
           <p className="font-serif text-2xl text-ink font-medium">{scores.overall} / 10</p>
         </div>
         <div className="flex gap-4">
-          <ScoreBadge score={scores.accuracy} label="Accuracy" />
-          <ScoreBadge score={scores.fluency} label="Fluency" />
-          <ScoreBadge score={scores.pace} label="Pace" />
+          {dimensions.map(({ key, label }) => (
+            <ScoreBadge key={key} score={scores[key]} label={label} />
+          ))}
         </div>
       </div>
 
@@ -54,9 +56,9 @@ export default function ScoreCard({ scores, feedback, onRecordAgain }) {
 
       {/* Per-dimension feedback */}
       <div className="space-y-4 border-t border-border pt-4">
-        <FeedbackRow label="Accuracy" score={scores.accuracy} text={feedback.accuracy} />
-        <FeedbackRow label="Fluency" score={scores.fluency} text={feedback.fluency} />
-        <FeedbackRow label="Pace" score={scores.pace} text={feedback.pace} />
+        {dimensions.map(({ key, label }) => (
+          <FeedbackRow key={key} label={label} score={scores[key]} text={feedback[key]} />
+        ))}
       </div>
 
       <button type="button" className="btn-secondary w-full" onClick={onRecordAgain}>

@@ -41,6 +41,7 @@ function normalizeProfile(p) {
     jobTitle,
     industry,
     careerGoal,
+    targetRole: String(p?.targetRole ?? "").trim(),
     focusAreas: focusAreas.slice(0, 3),
     speakingInspirations,
     readingStyle,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FOCUS_AREA_OPTIONS } from "../lib/constants.js";
+import { FOCUS_AREA_OPTIONS, TARGET_ROLE_SUGGESTIONS } from "../lib/constants.js";
 import { loadProfile, saveProfile } from "../lib/storage.js";
 import { requestAndSubscribe, unsubscribe } from "../lib/notifications.js";
 import SpeakerInput from "../components/SpeakerInput.jsx";
@@ -60,6 +60,7 @@ export default function Settings({ onSaved }) {
   const [jobTitle, setJobTitle] = useState(initial?.jobTitle || "");
   const [industry, setIndustry] = useState(initial?.industry || "");
   const [careerGoal, setCareerGoal] = useState(initial?.careerGoal || "");
+  const [targetRole, setTargetRole] = useState(initial?.targetRole || "");
   const [focusAreas, setFocusAreas] = useState(initial?.focusAreas || []);
   const [readingStyle, setReadingStyle] = useState(initial?.readingStyle || "checkin");
   const [passageLength, setPassageLength] = useState(initial?.passageLength || "medium");
@@ -96,7 +97,7 @@ export default function Settings({ onSaved }) {
     setError("");
     saveProfile({
       name: name.trim(), jobTitle: jobTitle.trim(), industry: industry.trim(),
-      careerGoal: careerGoal.trim(), focusAreas: focusAreas.slice(0, 3),
+      careerGoal: careerGoal.trim(), targetRole: targetRole.trim(), focusAreas: focusAreas.slice(0, 3),
       speakingInspirations, readingStyle, passageLength,
       dyslexiaMode, dyslexiaFont, fontSize,
     });
@@ -138,6 +139,17 @@ export default function Settings({ onSaved }) {
                 onChange={(e) => setCareerGoal(e.target.value)}
               />
             </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="font-sans text-xs text-inkMuted">Pivoting into (optional)</span>
+              <input className="input" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} placeholder='e.g. "Tech sales"' />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {TARGET_ROLE_SUGGESTIONS.map((r) => (
+                <button key={r} type="button" data-active={targetRole === r} className="chip text-xs py-1.5 px-3" onClick={() => setTargetRole(targetRole === r ? "" : r)}>
+                  {r}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 

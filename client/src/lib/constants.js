@@ -26,6 +26,8 @@ export const ALL_SPEAKERS = [
   // Career & management
   "Adam Grant", "Patty McCord", "Liz Wiseman", "Michael Bungay Stanier",
   "David Marquet", "Frances Frei", "Amy Edmondson", "Tomas Chamorro-Premuzic",
+  // Sales & persuasion
+  "Chris Voss", "Alex Hormozi", "Marc Benioff", "Jeb Blount", "Zig Ziglar",
 ].filter((v, i, a) => a.indexOf(v) === i); // deduplicate
 
 /** Focus areas (onboarding chips + profile); used as passage themes. */
@@ -38,6 +40,40 @@ export const FOCUS_AREA_OPTIONS = [
   "Technical leadership",
   "Strategic thinking",
   "Influencing without authority",
+  "Pitching & persuasion",
+];
+
+/** Quick picks for "pivoting into" (onboarding + settings). Free text is also allowed. */
+export const TARGET_ROLE_SUGGESTIONS = [
+  "Tech sales (Account Executive)",
+  "SDR / BDR",
+  "Customer Success",
+  "Solutions Engineering",
+  "Product Management",
+];
+
+/** Pitch practice scenarios (keys must match PITCH_SCENARIOS on the server). */
+export const PITCH_SCENARIOS = [
+  { id: "Elevator pitch", hint: "60 seconds with a senior buyer" },
+  { id: "Cold call opener", hint: "Earn the next 5 minutes" },
+  { id: "Discovery call", hint: "Uncover pain and impact" },
+  { id: "Product demo", hint: "Tie the demo to their problem" },
+  { id: "Handling an objection", hint: "Acknowledge, explore, reframe" },
+  { id: "Closing next steps", hint: "Lock in a concrete next step" },
+];
+
+/** Score dimensions per practice type (used by ScoreCard and Progress). */
+export const READING_DIMENSIONS = [
+  { key: "accuracy", label: "Accuracy" },
+  { key: "fluency", label: "Fluency" },
+  { key: "pace", label: "Pace" },
+];
+
+export const PITCH_DIMENSIONS = [
+  { key: "structure", label: "Structure" },
+  { key: "valueFocus", label: "Value" },
+  { key: "salesLanguage", label: "Sales voice" },
+  { key: "confidence", label: "Confidence" },
 ];
 
 /** Theme list for daily check-in “pick a theme” (matches server rotation). */

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FOCUS_AREA_OPTIONS } from "../lib/constants.js";
+import { FOCUS_AREA_OPTIONS, TARGET_ROLE_SUGGESTIONS } from "../lib/constants.js";
 import { saveProfile } from "../lib/storage.js";
 import { requestAndSubscribe } from "../lib/notifications.js";
 import SpeakerInput from "../components/SpeakerInput.jsx";
@@ -16,6 +16,7 @@ const SPEAKERS_BY_FOCUS = {
   "Technical leadership":          ["Jensen Huang", "Satya Nadella", "Sam Altman", "Anjali Sud", "Kelsey Hightower", "Will Larson", "Charity Majors"],
   "Strategic thinking":            ["Barack Obama", "Reed Hastings", "Jamie Dimon", "Oprah Winfrey", "Ray Dalio", "Roger Martin", "A.G. Lafley"],
   "Influencing without authority": ["Simon Sinek", "Adam Grant", "Gary Vaynerchuk", "Michelle Obama", "Codie Sanchez", "Robert Cialdini", "Jonah Berger"],
+  "Pitching & persuasion":         ["Chris Voss", "Marc Benioff", "Alex Hormozi", "Daniel Pink", "Robert Cialdini", "Codie Sanchez", "Jeb Blount"],
 };
 
 const FALLBACK_SPEAKERS = [
@@ -44,6 +45,7 @@ export default function Onboarding({ onComplete }) {
   const [jobTitle, setJobTitle] = useState("");
   const [industry, setIndustry] = useState("");
   const [careerGoal, setCareerGoal] = useState("");
+  const [targetRole, setTargetRole] = useState("");
   const [focusAreas, setFocusAreas] = useState([]);
   const [speakingInspirations, setSpeakingInspirations] = useState([]);
   const [readingStyle, setReadingStyle] = useState(null);
@@ -109,7 +111,7 @@ export default function Onboarding({ onComplete }) {
   const finish = () => {
     saveProfile({
       name: name.trim(), jobTitle: jobTitle.trim(), industry: industry.trim(),
-      careerGoal: careerGoal.trim(), focusAreas: focusAreas.slice(0, 3),
+      careerGoal: careerGoal.trim(), targetRole: targetRole.trim(), focusAreas: focusAreas.slice(0, 3),
       speakingInspirations, readingStyle, passageLength, dyslexiaMode,
     });
     onComplete?.();
@@ -180,6 +182,19 @@ export default function Onboarding({ onComplete }) {
                 <span className="onboarding-label">Where do you want to be in 2–3 years?</span>
                 <textarea className="onboarding-input min-h-[120px] resize-y leading-relaxed" value={careerGoal} onChange={(e) => setCareerGoal(e.target.value)} placeholder='e.g. "Moving into a technical leadership or management role"' />
               </label>
+              <div>
+                <label className="block">
+                  <span className="onboarding-label">Changing careers? What role are you pivoting into?</span>
+                  <input className="onboarding-input" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} placeholder='Optional, e.g. "Tech sales"' />
+                </label>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {TARGET_ROLE_SUGGESTIONS.map((r) => (
+                    <button key={r} type="button" data-active={targetRole === r} onClick={() => setTargetRole(targetRole === r ? "" : r)} className="onboarding-chip text-sm py-1.5 px-3">
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="min-h-[2rem]" />
             <div className="sticky bottom-0 bg-paper pt-2 pb-8">

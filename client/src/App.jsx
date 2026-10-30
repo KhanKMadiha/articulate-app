@@ -4,6 +4,7 @@ import { loadProfile, loadReadDates } from "./lib/storage.js";
 import Onboarding from "./pages/Onboarding.jsx";
 import Home from "./pages/Home.jsx";
 import Read from "./pages/Read.jsx";
+import Pitch from "./pages/Pitch.jsx";
 import Favourites from "./pages/Favourites.jsx";
 import Progress from "./pages/Progress.jsx";
 import Settings from "./pages/Settings.jsx";
@@ -76,6 +77,7 @@ export default function App() {
       >
         <Route index element={<Home />} />
         <Route path="read" element={<Read />} />
+        <Route path="pitch" element={<Pitch />} />
         <Route path="favourites" element={<Favourites />} />
         <Route path="progress" element={<Progress />} />
         <Route path="settings" element={<Settings onSaved={refreshProfile} />} />

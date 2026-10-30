@@ -86,6 +86,7 @@ export default function Home() {
         surprise,
         targetReadMinutes,
         dyslexiaMode: profile.dyslexiaMode ?? false,
+        targetRole: profile.targetRole || "",
       });
       saveSession({ dateKey, mood, themeMode, themePick, passage: data, completedToday: false });
       navigate("/read");
@@ -308,6 +309,19 @@ export default function Home() {
         <div className="space-y-3">
           <button type="button" className="btn-primary w-full py-4 text-base" onClick={handleGenerate}>
             {checkinFirst ? "Generate today's passage" : "Open today's passage"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/pitch")}
+            className="w-full rounded-2xl border border-border bg-white/40 px-5 py-4 text-left hover:border-accent/40 transition-colors"
+          >
+            <p className="font-sans text-sm font-semibold text-ink">Practise a pitch →</p>
+            <p className="font-sans text-xs text-inkMuted mt-0.5">
+              {profile.targetRole
+                ? `Role-play a real scenario and learn to sound like you already work in ${profile.targetRole}.`
+                : "Role-play a sales scenario in your own words and get coached on it."}
+            </p>
           </button>
 
           {init.hasPassage && (

@@ -32,6 +32,10 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 
 **Library** — save favourite passages to return to before a big moment.
 
+**Career pivot mode** — changing careers? Tell Articulate the role you are moving into (tech sales, customer success, solutions engineering, product management, or anything else) and your daily passages are written in the voice of someone already doing that job. For sales roles that means discovery openers, objection talk tracks, and real sales vocabulary, so reading aloud trains the register you need in interviews and on calls.
+
+**Pitch practice** — role-play six real sales moments: elevator pitch, cold call opener, discovery call, product demo, handling an objection, and closing next steps. Claude builds a realistic buyer, situation, and likely objection, along with the beats to hit and phrases to try. You pitch out loud in your own words and get scored on structure, value focus, sales voice, and confidence. Then you see the exact lines that weakened you with stronger alternatives, plus a rewrite of your pitch in a seasoned rep's voice to read aloud before you try again.
+
 ---
 
 ## Screenshots
@@ -168,13 +172,13 @@ articulate-app/
 ├── LICENCE               # MIT
 ├── client/               # React + Vite frontend
 │   ├── src/
-│   │   ├── pages/        # Home, Read, Onboarding, Settings, Favourites, Progress
+│   │   ├── pages/        # Home, Read, Pitch, Onboarding, Settings, Favourites, Progress
 │   │   ├── components/   # AppShell, SpeakerInput, …
 │   │   ├── hooks/        # useRecorder (speech recording)
 │   │   └── lib/          # API, storage, notifications, constants
 │   └── public/           # PWA assets
 └── server/
-    └── index.js          # Express API — passages, scoring, push
+    └── index.js          # Express API — passages, pitch scenarios, scoring, push
 ```
 
 ---
@@ -196,7 +200,7 @@ Run from the **repo root**:
 ## Privacy & API usage
 
 - **Do not commit `.env`** — it is not tracked by Git; use `.env.example` as a template only
-- Passages and scores are sent to the **Anthropic API** from your server using `ANTHROPIC_API_KEY`
+- Passages, pitch transcripts, and scores are sent to the **Anthropic API** from your server using `ANTHROPIC_API_KEY`
 - Profile and progress data stay in the **browser** (localStorage); the server does not store user accounts
 - Microphone access uses the **Web Speech API** in the browser for recording/scoring flows
 - Push subscriptions are held **in memory** on the server (reset on redeploy)
