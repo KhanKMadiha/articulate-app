@@ -64,6 +64,22 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 
 ![Complete](screenshots/06-see-you-tomorrow.png)
 
+### Pitch practice — pick a scenario
+
+![Pitch setup](screenshots/08-pitch-setup.png)
+
+### Pitch practice — the buyer and situation
+
+![Pitch scenario](screenshots/09-pitch-scenario.png)
+
+### Pitch practice — scored on structure, value, sales voice, and confidence
+
+![Pitch feedback](screenshots/10-pitch-feedback.png)
+
+### Pitch practice — stronger lines and a seasoned rep's rewrite
+
+![Pitch rewrite](screenshots/11-pitch-rewrite.png)
+
 ---
 
 ## Tech stack
