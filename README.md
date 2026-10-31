@@ -52,6 +52,10 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 
 ![Home](screenshots/04-home.png)
 
+### Daily home — after today's reading
+
+![Home after reading](screenshots/04b-home-done.png)
+
 ### Passage with recording
 
 ![Passage](screenshots/05-passage.png)
