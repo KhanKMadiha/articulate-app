@@ -34,7 +34,7 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 
 **Career pivot mode** — changing careers? Tell Articulate the role you are moving into (tech sales, customer success, solutions engineering, product management, or anything else) and your daily passages are written in the voice of someone already doing that job. For sales roles that means discovery openers, objection talk tracks, and real sales vocabulary, so reading aloud trains the register you need in interviews and on calls.
 
-**Pitch practice** — rehearse the high-stakes moments of a job out loud. Pick what you are practising for (Product Support, speaking to leadership, tech sales, SDR, Customer Success, Solutions Engineering, Product Management, or your own), who you are speaking to (a customer, a C-suite exec, an engineering lead, a buyer, and more), and a scenario such as a P1 incident update, delivering bad news, a cold call opener, or a renewal at risk. Claude builds a realistic person, situation, and likely pushback, along with the beats to hit and phrases to try. You speak in your own words and get scored on structure, value, sounding the part, and confidence, including whether your detail and tone fit the audience. Then you see the exact lines that weakened you with stronger alternatives, plus a rewrite in a seasoned professional's voice to read aloud before you try again.
+**Rehearse** — practise the high-stakes conversations of a job out loud. Pick what you are practising for (Product Support, speaking to leadership, tech sales, SDR, Customer Success, Solutions Engineering, Product Management, or your own), who you are speaking to (a customer, a C-suite exec, an engineering lead, a buyer, and more), and a scenario such as a P1 incident update, delivering bad news, a cold call opener, or a renewal at risk. Claude builds a realistic person, situation, and likely pushback, along with the beats to hit and phrases to try. You speak in your own words and get scored on structure, value, sounding the part, and confidence, including whether your detail and tone fit the audience. Then you see the exact lines that weakened you with stronger alternatives, plus a rewrite in a seasoned professional's voice to read aloud before you try again.
 
 ---
 
@@ -72,21 +72,21 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 
 ![Complete](screenshots/06-see-you-tomorrow.png)
 
-### Pitch practice — what you are practising for, who you are speaking to, and the scenario
+### Rehearse — what you are practising for, who you are speaking to, and the scenario
 
-![Pitch setup](screenshots/08-pitch-setup.png)
+![Rehearse setup](screenshots/08-pitch-setup.png)
 
-### Pitch practice — the person and the situation
+### Rehearse — the person and the situation
 
-![Pitch scenario](screenshots/09-pitch-scenario.png)
+![Rehearse scenario](screenshots/09-pitch-scenario.png)
 
-### Pitch practice — scored on structure, value, sounding the part, and confidence
+### Rehearse — scored on structure, value, sounding the part, and confidence
 
-![Pitch feedback](screenshots/10-pitch-feedback.png)
+![Rehearse feedback](screenshots/10-pitch-feedback.png)
 
-### Pitch practice — stronger lines and a seasoned professional's rewrite
+### Rehearse — stronger lines and a seasoned professional's rewrite
 
-![Pitch rewrite](screenshots/11-pitch-rewrite.png)
+![Rehearse rewrite](screenshots/11-pitch-rewrite.png)
 
 ---
 
@@ -196,13 +196,13 @@ articulate-app/
 ├── LICENCE               # MIT
 ├── client/               # React + Vite frontend
 │   ├── src/
-│   │   ├── pages/        # Home, Read, Pitch, Onboarding, Settings, Favourites, Progress
+│   │   ├── pages/        # Home, Read, Pitch (Rehearse), Onboarding, Settings, Favourites, Progress
 │   │   ├── components/   # AppShell, SpeakerInput, …
 │   │   ├── hooks/        # useRecorder (speech recording)
 │   │   └── lib/          # API, storage, notifications, constants
 │   └── public/           # PWA assets
 └── server/
-    └── index.js          # Express API — passages, pitch scenarios, scoring, push
+    └── index.js          # Express API — passages, rehearsal scenarios, scoring, push
 ```
 
 ---
@@ -224,7 +224,7 @@ Run from the **repo root**:
 ## Privacy & API usage
 
 - **Do not commit `.env`** — it is not tracked by Git; use `.env.example` as a template only
-- Passages, pitch transcripts, and scores are sent to the **Anthropic API** from your server using `ANTHROPIC_API_KEY`
+- Passages, rehearsal transcripts, and scores are sent to the **Anthropic API** from your server using `ANTHROPIC_API_KEY`
 - Profile and progress data stay in the **browser** (localStorage); the server does not store user accounts
 - Microphone access uses the **Web Speech API** in the browser for recording/scoring flows
 - Push subscriptions are held **in memory** on the server (reset on redeploy)
