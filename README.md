@@ -34,7 +34,7 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 
 **Career pivot mode** — changing careers? Tell Articulate the role you are moving into (tech sales, customer success, solutions engineering, product management, or anything else) and your daily passages are written in the voice of someone already doing that job. For sales roles that means discovery openers, objection talk tracks, and real sales vocabulary, so reading aloud trains the register you need in interviews and on calls.
 
-**Rehearse** — practise the high-stakes conversations of a job out loud. Pick what you are practising for (Product Support, speaking to leadership, tech sales, SDR, Customer Success, Solutions Engineering, Product Management, or your own), who you are speaking to (a customer, a C-suite exec, an engineering lead, a buyer, and more), and a scenario such as a P1 incident update, delivering bad news, a cold call opener, or a renewal at risk. Claude builds a realistic person, situation, and likely pushback, along with the beats to hit and phrases to try. You speak in your own words and get scored on structure, value, sounding the part, and confidence, including whether your detail and tone fit the audience. Then you see the exact lines that weakened you with stronger alternatives, plus a rewrite in a seasoned professional's voice to read aloud before you try again.
+**Rehearse** — practise the high-stakes conversations of a job out loud. Pick what you are practising for (Product Support, speaking to leadership, tech sales, SDR, Customer Success, Solutions Engineering, Product Management, or your own), who you are speaking to (a customer, a C-suite exec, an engineering lead, a buyer, and more), and a scenario such as a P1 incident update, delivering bad news, a cold call opener, or a renewal at risk. Claude builds a realistic person, situation, and likely pushback, along with the beats to hit and phrases to try. If you are stuck, you can open an example of how a seasoned professional would handle it; it stays hidden by default so you try your own words first. While you record, the example disappears and a cue card keeps the beats in view. You speak in your own words and get scored on structure, value, sounding the part, and confidence, including whether your detail and tone fit the audience. Then you see the exact lines that weakened you with stronger alternatives, plus a rewrite in a seasoned professional's voice to read aloud before you try again.
 
 ---
 
@@ -79,6 +79,14 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 ### Rehearse — the person and the situation
 
 ![Rehearse scenario](screenshots/09-pitch-scenario.png)
+
+### Rehearse — an optional example if you are stuck
+
+![Rehearse example](screenshots/12-rehearse-example.png)
+
+### Rehearse — a cue card keeps the beats in view while you speak
+
+![Rehearse cue card](screenshots/13-rehearse-cue-card.png)
 
 ### Rehearse — scored on structure, value, sounding the part, and confidence
 
