@@ -406,6 +406,7 @@ function clip(value, max, fallback = "") {
 function readPitchContext(body) {
   return {
     goalLabel: clip(body.goalLabel, 80, "a client-facing role"),
+    roleLabel: clip(body.roleLabel, 80, "professional"),
     audienceLabel: clip(body.audienceLabel, 80, "a senior stakeholder"),
     audienceStyle: clip(body.audienceStyle, 300),
   };
@@ -480,7 +481,7 @@ app.post("/api/score-pitch", async (req, res) => {
     return res.status(400).json({ error: "scenario and transcript are required." });
   }
 
-  const { goalLabel, audienceLabel, audienceStyle } = readPitchContext(body);
+  const { goalLabel, roleLabel, audienceLabel, audienceStyle } = readPitchContext(body);
   const actualSecs = Math.round(Number(durationSeconds) || 0);
 
   const userMessage = `Someone stepping into ${goalLabel} just delivered this out loud to ${audienceLabel} in a role-play. Coach them.
@@ -497,7 +498,7 @@ ${actualSecs > 0 ? `\nThey spoke for ${actualSecs}s. Target was about ${scenario
 Score each dimension 1–10:
 - structure: Did they hit the beats in order and finish with a clear ask or next step?
 - valueFocus: Did they lead with what matters to ${audienceLabel}, rather than internal detail?
-- salesLanguage: Do they sound like a seasoned ${goalLabel}? The vocabulary and rhythm of the role.
+- salesLanguage: Do they sound like a seasoned ${roleLabel}? The vocabulary and rhythm of the role.
 - confidence: Filler words, hedging ("I just wanted to", "sort of", "maybe", "sorry"), rambling, and length vs the target all count against this.
 - overall: Holistic. Would this land with ${audienceLabel}?
 
@@ -505,7 +506,7 @@ Judge whether the level of detail and tone fit ${audienceLabel}${audienceStyle ?
 
 Then:
 - swaps: up to 3 things they actually said that weakened them, each with a stronger alternative. Quote them closely. If nothing weak, return an empty array.
-- strongerVersion: rewrite it as a seasoned ${goalLabel} would say it to ${audienceLabel}, about 80–130 words, keeping their ideas and facts. Written for the voice, so they can read it aloud to practise. No em dashes.
+- strongerVersion: rewrite it as a seasoned ${roleLabel} would say it to ${audienceLabel}, about 80–130 words, keeping their ideas and facts. Written for the voice, so they can read it aloud to practise. No em dashes.
 
 Respond with ONLY this JSON (no markdown, no commentary):
 {

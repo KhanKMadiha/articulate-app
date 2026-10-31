@@ -54,6 +54,7 @@ export const TARGET_ROLE_SUGGESTIONS = [
 
 /**
  * Pitch practice: what you're practising for, who you're speaking to, and the scenarios.
+ * `role` is the person you sound like ("a seasoned support engineer").
  * `match` maps profile.targetRole onto a goal for the first-visit default.
  * `style` is one line on how to talk to that audience; it's sent to the server prompts.
  */
@@ -61,6 +62,7 @@ export const PITCH_GOALS = [
   {
     id: "support",
     label: "Product Support",
+    role: "support engineer",
     match: /support/i,
     audiences: [
       { id: "customer", label: "Customer", style: "Admin or day-to-day user. Practical and specific: what's happening, what to do now, when they'll hear next." },
@@ -79,6 +81,7 @@ export const PITCH_GOALS = [
   {
     id: "leadership",
     label: "Speaking to leadership",
+    role: "leader",
     match: /leadership/i,
     audiences: [
       { id: "manager", label: "Your manager", style: "Direct and candid. Lead with the headline, then what you need from them." },
@@ -94,6 +97,7 @@ export const PITCH_GOALS = [
   {
     id: "sales",
     label: "Tech sales (AE)",
+    role: "account executive",
     match: /tech sales|account exec|\bae\b/i,
     audiences: [
       { id: "buyer", label: "Buyer", style: "Day-to-day decision maker. Their problem first, specific value, sharp questions, a clear next step." },
@@ -111,6 +115,7 @@ export const PITCH_GOALS = [
   {
     id: "sdr",
     label: "SDR / BDR",
+    role: "SDR",
     match: /\bsdr\b|\bbdr\b|business development/i,
     audiences: [
       { id: "prospect", label: "Prospect", style: "Busy and sceptical. Earn attention fast with a relevant reason for calling and a low-friction ask." },
@@ -125,6 +130,7 @@ export const PITCH_GOALS = [
   {
     id: "cs",
     label: "Customer Success",
+    role: "customer success manager",
     match: /customer success/i,
     audiences: [
       { id: "champion", label: "Customer champion", style: "Your day-to-day ally. Collaborative and specific; help them make the case internally." },
@@ -139,6 +145,7 @@ export const PITCH_GOALS = [
   {
     id: "se",
     label: "Solutions Engineering",
+    role: "solutions engineer",
     match: /solutions? (engineer|consult|architect)/i,
     audiences: [
       { id: "technical", label: "Technical buyer", style: "Wants depth and proof. Precise, honest about limits, ready for follow-up questions." },
@@ -153,6 +160,7 @@ export const PITCH_GOALS = [
   {
     id: "pm",
     label: "Product Management",
+    role: "product manager",
     match: /product manag|\bpm\b/i,
     audiences: [
       { id: "stakeholder", label: "Stakeholder", style: "Cares about their outcome. Clear trade-offs, honest timelines, what it means for them." },
@@ -168,6 +176,7 @@ export const PITCH_GOALS = [
   {
     id: "other",
     label: "Other",
+    role: "professional",
     audiences: [
       { id: "peer", label: "Peer", style: "Collegial and direct. Get to the point and make it easy to say yes." },
       { id: "senior", label: "Senior leader", style: "Bottom line first, business impact, brief and confident." },

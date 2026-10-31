@@ -114,7 +114,7 @@ export default function Pitch() {
   const scenarioDef = goal.scenarios.find((s) => s.id === scenarioId) ?? goal.scenarios[0];
   const goalLabel = goal.id === "other" ? customGoal.trim() : goal.label;
   const selling = SELLING_GOAL_IDS.includes(goal.id);
-  const pitchContext = { goalLabel, audienceLabel: audience.label, audienceStyle: audience.style };
+  const pitchContext = { goalLabel, roleLabel: goal.role, audienceLabel: audience.label, audienceStyle: audience.style };
 
   const selectAudience = (id) => {
     setAudienceId(id);
@@ -259,7 +259,7 @@ export default function Pitch() {
 
         {result.strongerVersion && (
           <section className="rounded-2xl border border-border bg-white/60 p-6 shadow-soft space-y-3">
-            <Label>How a seasoned {goalLabel} would say it</Label>
+            <Label>How a seasoned {goal.role} would say it</Label>
             <p className="font-serif text-lg leading-[1.75] text-ink whitespace-pre-line">{result.strongerVersion}</p>
             <p className="font-sans text-xs text-inkFaint">Read it aloud a couple of times, then try your own version again.</p>
           </section>
