@@ -34,7 +34,7 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 
 **Career pivot mode** — changing careers? Tell Articulate the role you are moving into (tech sales, customer success, solutions engineering, product management, or anything else) and your daily passages are written in the voice of someone already doing that job. For sales roles that means discovery openers, objection talk tracks, and real sales vocabulary, so reading aloud trains the register you need in interviews and on calls.
 
-**Pitch practice** — role-play six real sales moments: elevator pitch, cold call opener, discovery call, product demo, handling an objection, and closing next steps. Claude builds a realistic buyer, situation, and likely objection, along with the beats to hit and phrases to try. You pitch out loud in your own words and get scored on structure, value focus, sales voice, and confidence. Then you see the exact lines that weakened you with stronger alternatives, plus a rewrite of your pitch in a seasoned rep's voice to read aloud before you try again.
+**Pitch practice** — rehearse the high-stakes moments of a job out loud. Pick what you are practising for (Product Support, speaking to leadership, tech sales, SDR, Customer Success, Solutions Engineering, Product Management, or your own), who you are speaking to (a customer, a C-suite exec, an engineering lead, a buyer, and more), and a scenario such as a P1 incident update, delivering bad news, a cold call opener, or a renewal at risk. Claude builds a realistic person, situation, and likely pushback, along with the beats to hit and phrases to try. You speak in your own words and get scored on structure, value, sounding the part, and confidence, including whether your detail and tone fit the audience. Then you see the exact lines that weakened you with stronger alternatives, plus a rewrite in a seasoned professional's voice to read aloud before you try again.
 
 ---
 
@@ -72,19 +72,19 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 
 ![Complete](screenshots/06-see-you-tomorrow.png)
 
-### Pitch practice — pick a scenario
+### Pitch practice — what you are practising for, who you are speaking to, and the scenario
 
 ![Pitch setup](screenshots/08-pitch-setup.png)
 
-### Pitch practice — the buyer and situation
+### Pitch practice — the person and the situation
 
 ![Pitch scenario](screenshots/09-pitch-scenario.png)
 
-### Pitch practice — scored on structure, value, sales voice, and confidence
+### Pitch practice — scored on structure, value, sounding the part, and confidence
 
 ![Pitch feedback](screenshots/10-pitch-feedback.png)
 
-### Pitch practice — stronger lines and a seasoned rep's rewrite
+### Pitch practice — stronger lines and a seasoned professional's rewrite
 
 ![Pitch rewrite](screenshots/11-pitch-rewrite.png)
 
