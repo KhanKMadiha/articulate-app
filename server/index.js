@@ -112,6 +112,27 @@ function pivotBlock(currentRole, targetRole) {
 CAREER PIVOT: This person is moving from ${currentRole} into ${targetRole}. The passage should train them to sound like an experienced ${targetRole}: the vocabulary, the rhythm, the confidence. Where it fits, show how experience from ${currentRole} becomes an advantage in ${targetRole}.${salesLines}`;
 }
 
+/**
+ * The prompts ask for no em dashes, but the model still slips some in. Replace them
+ * (and spaced en dashes used as dashes) with ": " in titles and ", " elsewhere.
+ * Only spaces/tabs are trimmed, so paragraph breaks survive; ranges like "2–3" are left alone.
+ */
+function stripEmDashes(value, key = "") {
+  if (typeof value === "string") {
+    const sep = key === "title" ? ": " : ", ";
+    return value
+      .replace(/[ \t]*(?:—|[ \t]–[ \t])[ \t]*/g, sep)
+      .replace(/^[,:] /gm, "")
+      .replace(/([,:]) $/gm, "$1")
+      .replace(/[,:] ([.,;:!?])/g, "$1");
+  }
+  if (Array.isArray(value)) return value.map((v) => stripEmDashes(v));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, stripEmDashes(v, k)]));
+  }
+  return value;
+}
+
 /** Calls Claude and parses a single JSON object from the reply. Throws { status, message } on failure. */
 async function askClaudeForJSON({ system, userMessage, maxTokens }) {
   const message = await anthropic.messages.create({
@@ -125,7 +146,7 @@ async function askClaudeForJSON({ system, userMessage, maxTokens }) {
   let raw = textBlock.text.trim();
   if (raw.startsWith("```")) raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
   try {
-    return JSON.parse(raw);
+    return stripEmDashes(JSON.parse(raw));
   } catch {
     throw Object.assign(new Error("Model returned non-JSON. Try again."), { status: 502 });
   }
@@ -271,7 +292,7 @@ app.post("/api/generate-passage", async (req, res) => {
 
     let parsed;
     try {
-      parsed = JSON.parse(raw);
+      parsed = stripEmDashes(JSON.parse(raw));
     } catch {
       return res.status(502).json({
         error: "Model returned non-JSON. Try again.",
@@ -379,7 +400,7 @@ Respond with ONLY this JSON (no markdown, no commentary):
 
     let parsed;
     try {
-      parsed = JSON.parse(raw);
+      parsed = stripEmDashes(JSON.parse(raw));
     } catch {
       return res.status(502).json({ error: "Model returned non-JSON.", rawPreview: raw.slice(0, 200) });
     }
