@@ -217,21 +217,17 @@ export default function Home() {
     </div>
   );
 
-  const pitchDescription = profile.targetRole
-    ? `Role-play a real scenario and learn to sound like you already work in ${profile.targetRole}.`
-    : "Role-play a sales scenario in your own words and get coached on it.";
-
   const subline = {
     fresh: checkinFirst
       ? "A quick check-in, then today's passage."
       : `Ready when you are. ~${targetReadMinutes} min, tailored to you.`,
     inProgress: "Your passage is waiting where you left it.",
-    done: "Today's reading is done. Keep the momentum with a pitch.",
+    done: "Today's reading is done. Keep the momentum with a rehearsal.",
   }[dayState];
 
   return (
-    <div className="flex-1 flex flex-col animate-fade-up">
-      <div className="flex-1 flex flex-col surface p-6 sm:p-8 gap-7">
+    <div className="flex flex-col animate-fade-up">
+      <div className="flex flex-col surface p-6 sm:p-8 gap-7">
 
         {/* Greeting */}
         <div className="space-y-1">
@@ -353,23 +349,13 @@ export default function Home() {
           </div>
         )}
 
-        {/* Done: read note + pitch as the main action */}
+        {/* Done: read note (Rehearse becomes the primary CTA below) */}
         {dayState === "done" && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-accent/30 bg-accentSoft/40 px-5 py-4">
-              <p className="font-sans text-sm font-semibold text-ink">You&apos;ve read today ✓</p>
-              {todaysPassage?.title && (
-                <p className="font-sans text-xs text-inkMuted mt-0.5">{todaysPassage.title}</p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/pitch")}
-              className="w-full rounded-2xl bg-accent px-5 py-5 text-left shadow-sm hover:bg-accentDeep transition-colors"
-            >
-              <p className="font-serif text-xl text-white">Practise a pitch →</p>
-              <p className="font-sans text-sm text-white/85 mt-1 leading-relaxed">{pitchDescription}</p>
-            </button>
+          <div className="rounded-2xl border border-accent/30 bg-accentSoft/40 px-5 py-4">
+            <p className="font-sans text-sm font-semibold text-ink">You&apos;ve read today ✓</p>
+            {todaysPassage?.title && (
+              <p className="font-sans text-xs text-inkMuted mt-0.5">{todaysPassage.title}</p>
+            )}
           </div>
         )}
 
@@ -390,17 +376,16 @@ export default function Home() {
             </button>
           )}
 
-          {dayState !== "done" && (
-            <div className="flex justify-center px-1">
-              <button
-                type="button"
-                onClick={() => navigate("/pitch")}
-                className="font-sans text-sm text-inkMuted hover:text-accent transition-colors"
-              >
-                Or practise a pitch →
-              </button>
-            </div>
-          )}
+          <button
+            type="button"
+            className={`${dayState === "done" ? "btn-primary" : "btn-secondary"} w-full py-4 text-base`}
+            onClick={() => navigate("/pitch")}
+          >
+            Rehearse a conversation
+          </button>
+          <p className="font-sans text-xs text-inkFaint text-center">
+            Role-play a real moment from work and get coached.
+          </p>
 
           {dayState === "inProgress" && (
             <div className="flex justify-center px-1">

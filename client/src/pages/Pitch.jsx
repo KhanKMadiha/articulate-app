@@ -230,7 +230,7 @@ export default function Pitch() {
       />
     );
   }
-  if (scoring) return <FullScreenStatus title="Reviewing your pitch…" sub="Structure, focus, tone and confidence" />;
+  if (scoring) return <FullScreenStatus title="Reviewing your rehearsal…" sub="Structure, focus, tone and confidence" />;
 
   // ── Results ────────────────────────────────────────────────────────────────
   if (result) {
@@ -266,7 +266,7 @@ export default function Pitch() {
         )}
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <button type="button" className="btn-primary flex-1" onClick={handleBackToBrief}>Try this pitch again</button>
+          <button type="button" className="btn-primary flex-1" onClick={handleBackToBrief}>Try it again</button>
           <button type="button" className="btn-secondary flex-1" onClick={handleChangeScenario}>New scenario</button>
         </div>
       </article>
@@ -388,7 +388,7 @@ export default function Pitch() {
         <div className="flex flex-col gap-3">
           <BackLink onClick={() => navigate("/")}>Today</BackLink>
           <div className="space-y-1">
-            <p className="font-sans text-xs uppercase tracking-[0.2em] text-inkFaint">Pitch practice</p>
+            <p className="font-sans text-xs uppercase tracking-[0.2em] text-inkFaint">Rehearse</p>
             <h1 className="font-serif text-3xl text-ink leading-tight">Talk like you&apos;re already in the role</h1>
             <p className="font-sans text-sm text-inkMuted leading-relaxed">
               Practising for <span className="text-ink font-medium">{goalLabel || "…"}</span>, speaking to{" "}
