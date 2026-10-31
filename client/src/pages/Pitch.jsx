@@ -106,6 +106,8 @@ export default function Pitch() {
   const [scoring, setScoring] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
+  const [showExample, setShowExample] = useState(false);
+  const [usedExample, setUsedExample] = useState(false);
 
   const recorder = useRecorder();
 
@@ -160,6 +162,8 @@ export default function Pitch() {
         context: context.trim(),
       });
       setScenario(data);
+      setShowExample(false);
+      setUsedExample(false);
       setResult(null);
       recorder.reset();
     } catch (e) {
@@ -168,6 +172,11 @@ export default function Pitch() {
       setLoading(false);
     }
   };
+
+  // Collapse the example while speaking so the cue card is the only prompt
+  useEffect(() => {
+    if (recorder.state === "recording") setShowExample(false);
+  }, [recorder.state]);
 
   // Score once recording stops
   useEffect(() => {
@@ -196,6 +205,7 @@ export default function Pitch() {
           passageTheme: scenario.scenarioType,
           goalLabel,
           audienceLabel: audience.label,
+          usedExample,
           scores: data.scores,
           feedback: data.feedback,
           recordedAt: new Date().toISOString(),
@@ -336,6 +346,40 @@ export default function Pitch() {
                 <span className="font-semibold text-ink">Your edge: </span>{scenario.yourEdge}
               </p>
             )}
+          </section>
+        )}
+
+        {/* Optional example — hidden by default, never shown while recording */}
+        {!recording && scenario.exampleSpeech && (
+          <>
+            <button
+              type="button"
+              className="btn-secondary w-full"
+              aria-expanded={showExample}
+              onClick={() => {
+                setShowExample((open) => !open);
+                setUsedExample(true);
+              }}
+            >
+              {showExample ? "Hide example" : "See an example"}
+            </button>
+            {showExample && (
+              <section className="rounded-2xl border border-border bg-white/60 p-6 shadow-soft space-y-3">
+                <Label>Example</Label>
+                <p className="font-serif text-lg leading-[1.75] text-ink whitespace-pre-line">{scenario.exampleSpeech}</p>
+                <p className="font-sans text-xs text-inkFaint">Try it in your own words first. Use this if you&apos;re stuck.</p>
+              </section>
+            )}
+          </>
+        )}
+
+        {/* Cue card — keeps the beats in view while speaking */}
+        {recording && (scenario.beats || []).length > 0 && (
+          <section className="rounded-2xl border border-border bg-white/60 px-5 py-4 space-y-2">
+            <Label>Cue card</Label>
+            <ol className="list-decimal pl-5 space-y-1 font-sans text-sm text-ink">
+              {scenario.beats.map((b, i) => <li key={i}>{b}</li>)}
+            </ol>
           </section>
         )}
 

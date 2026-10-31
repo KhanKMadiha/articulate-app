@@ -439,7 +439,7 @@ app.post("/api/generate-pitch", async (req, res) => {
   }
 
   const body = req.body || {};
-  const { goalLabel, audienceLabel, audienceStyle } = readPitchContext(body);
+  const { goalLabel, roleLabel, audienceLabel, audienceStyle } = readPitchContext(body);
   const role = clip(body.role, 80, "a professional");
   const industry = clip(body.industry, 80, "their field");
   const type = clip(body.scenarioType, 80, "Short spoken update");
@@ -463,6 +463,7 @@ Rules:
 - likelyObjection is one realistic pushback or tough question the other person would raise.
 - If the learner's current background gives them credibility with the other person, mention how to use it in "yourEdge". Otherwise give a general confidence tip.
 - Pitch the level of detail and tone to the audience.
+- exampleSpeech is a natural 70 to 120 word version of how a seasoned ${roleLabel} would handle this exact scenario with this ${audienceLabel}, hitting the beats in order. Written for the voice: short sentences, said directly to the other person, no headings, no stage directions.
 - No em dashes.
 
 Respond with ONLY this JSON (no markdown, no commentary):
@@ -477,6 +478,7 @@ Respond with ONLY this JSON (no markdown, no commentary):
   "beats": ["<beat>", "<beat>", "<beat>"],
   "phrasesToTry": ["<phrase>", "<phrase>", "<phrase>"],
   "yourEdge": "<one sentence>",
+  "exampleSpeech": "<70-120 words, spoken>",
   "timeLimitSeconds": <45-120>
 }`;
 
@@ -485,7 +487,11 @@ Respond with ONLY this JSON (no markdown, no commentary):
     if (!scenario.title || !scenario.buyer || !scenario.situation) {
       return res.status(502).json({ error: "Incomplete scenario payload from model." });
     }
-    return res.json({ ...scenario, scenarioType: type });
+    return res.json({
+      ...scenario,
+      scenarioType: type,
+      exampleSpeech: typeof scenario.exampleSpeech === "string" ? scenario.exampleSpeech.trim() : "",
+    });
   } catch (err) {
     return sendError(res, err, "Scenario generation failed.");
   }
