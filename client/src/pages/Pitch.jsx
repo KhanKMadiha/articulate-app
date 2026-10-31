@@ -1,11 +1,48 @@
 import { useEffect, useState } from "react";
-import { useOutletContext } from "react-router-dom";
-import { PITCH_DIMENSIONS, PITCH_SCENARIOS } from "../lib/constants.js";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { PITCH_DIMENSIONS, PITCH_GOALS, SELLING_GOAL_IDS } from "../lib/constants.js";
 import { generatePitch, scorePitch } from "../lib/api.js";
-import { addPitchDate, saveScore } from "../lib/storage.js";
+import {
+  addPitchDate,
+  loadPitchAudiences,
+  loadPitchGoal,
+  saveScore,
+  savePitchAudiences,
+  savePitchGoal,
+} from "../lib/storage.js";
 import { todayKey } from "../lib/dates.js";
 import { useRecorder } from "../hooks/useRecorder.js";
 import ScoreCard from "../components/ScoreCard.jsx";
+
+const CUSTOM_GOAL_MAX = 60;
+
+/** Saved goal → profile.targetRole match → support-ish job title → sales. */
+function initialGoal(profile) {
+  const saved = loadPitchGoal();
+  if (saved && PITCH_GOALS.some((g) => g.id === saved.id)) return saved;
+  const target = (profile.targetRole || "").trim();
+  const byTarget = target && PITCH_GOALS.find(
+    (g) => g.label.toLowerCase() === target.toLowerCase() || g.match?.test(target)
+  );
+  if (byTarget) return { id: byTarget.id, custom: "" };
+  if (/support|escalation|success/i.test(profile.jobTitle || "")) return { id: "support", custom: "" };
+  return { id: "sales", custom: "" };
+}
+
+function findGoal(id) {
+  return PITCH_GOALS.find((g) => g.id === id) ?? PITCH_GOALS[0];
+}
+
+function rememberedAudience(goal, memory) {
+  const id = memory[goal.id];
+  return goal.audiences.some((a) => a.id === id) ? id : goal.audiences[0].id;
+}
+
+// "Customer" → "your customer", "Your manager" → "your manager", "C-suite exec" → "your C-suite exec"
+function toYour(label) {
+  const lowered = /^[A-Z][a-z]/.test(label) ? label[0].toLowerCase() + label.slice(1) : label;
+  return /^your /i.test(lowered) ? lowered : `your ${lowered}`;
+}
 
 function FullScreenStatus({ title, sub }) {
   return (
@@ -31,16 +68,39 @@ function Label({ children }) {
   );
 }
 
+function BackLink({ onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="self-start font-sans text-sm text-inkMuted hover:text-accent transition-colors"
+    >
+      ← {children}
+    </button>
+  );
+}
+
 function formatSeconds(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
 export default function Pitch() {
   const { profile } = useOutletContext();
-  const targetRole = profile.targetRole || "Tech sales (Account Executive)";
+  const navigate = useNavigate();
 
-  const [scenarioType, setScenarioType] = useState(PITCH_SCENARIOS[0].id);
-  const [product, setProduct] = useState("");
+  const [start] = useState(() => {
+    const goal = initialGoal(profile);
+    const memory = loadPitchAudiences();
+    const g = findGoal(goal.id);
+    return { goal, memory, audienceId: rememberedAudience(g, memory), scenarioId: g.scenarios[0].id };
+  });
+
+  const [goalId, setGoalId] = useState(start.goal.id);
+  const [customGoal, setCustomGoal] = useState(start.goal.custom);
+  const [audienceMemory, setAudienceMemory] = useState(start.memory);
+  const [audienceId, setAudienceId] = useState(start.audienceId);
+  const [scenarioId, setScenarioId] = useState(start.scenarioId);
+  const [context, setContext] = useState("");
   const [scenario, setScenario] = useState(null);
   const [loading, setLoading] = useState(false);
   const [scoring, setScoring] = useState(false);
@@ -49,16 +109,55 @@ export default function Pitch() {
 
   const recorder = useRecorder();
 
+  const goal = findGoal(goalId);
+  const audience = goal.audiences.find((a) => a.id === audienceId) ?? goal.audiences[0];
+  const scenarioDef = goal.scenarios.find((s) => s.id === scenarioId) ?? goal.scenarios[0];
+  const goalLabel = goal.id === "other" ? customGoal.trim() : goal.label;
+  const selling = SELLING_GOAL_IDS.includes(goal.id);
+  const pitchContext = { goalLabel, audienceLabel: audience.label, audienceStyle: audience.style };
+
+  const selectAudience = (id) => {
+    setAudienceId(id);
+    const next = { ...audienceMemory, [goalId]: id };
+    setAudienceMemory(next);
+    savePitchAudiences(next);
+  };
+
+  const selectGoal = (id) => {
+    const g = findGoal(id);
+    setGoalId(id);
+    savePitchGoal(id, customGoal);
+    setScenarioId(g.scenarios[0].id);
+    setAudienceId(rememberedAudience(g, audienceMemory));
+    setError("");
+  };
+
+  const changeCustomGoal = (value) => {
+    const v = value.slice(0, CUSTOM_GOAL_MAX);
+    setCustomGoal(v);
+    savePitchGoal("other", v);
+  };
+
+  const selectScenario = (s) => {
+    setScenarioId(s.id);
+    if (s.defaultAudience) selectAudience(s.defaultAudience);
+  };
+
   const handleGenerate = async () => {
+    if (!goalLabel) {
+      setError("Tell us what you're practising for.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
       const data = await generatePitch({
         role: profile.jobTitle,
         industry: profile.industry,
-        targetRole,
-        scenarioType,
-        product: product.trim(),
+        ...pitchContext,
+        scenarioType: scenarioDef.id,
+        scenarioBrief: scenarioDef.brief,
+        context: context.trim(),
       });
       setScenario(data);
       setResult(null);
@@ -84,7 +183,7 @@ export default function Pitch() {
       scenario,
       transcript: recorder.transcript,
       durationSeconds: recorder.duration,
-      targetRole,
+      ...pitchContext,
     })
       .then((data) => {
         setResult(data);
@@ -95,6 +194,8 @@ export default function Pitch() {
           date: dateKey,
           passageTitle: scenario.title,
           passageTheme: scenario.scenarioType,
+          goalLabel,
+          audienceLabel: audience.label,
           scores: data.scores,
           feedback: data.feedback,
           recordedAt: new Date().toISOString(),
@@ -105,31 +206,43 @@ export default function Pitch() {
       .finally(() => setScoring(false));
   }, [recorder.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleTryAgain = () => {
+  // Results → brief: keep the scenario, clear the result
+  const handleBackToBrief = () => {
     setResult(null);
     setError("");
     recorder.reset();
   };
 
-  const handleNewScenario = () => {
+  // Brief → setup: keeps goal, audience, scenario type and context
+  const handleChangeScenario = () => {
+    if (recorder.state === "recording" && !window.confirm("Stop recording and go back? This take won't be scored.")) return;
+    recorder.reset();
     setScenario(null);
     setResult(null);
     setError("");
-    recorder.reset();
   };
 
-  if (loading) return <FullScreenStatus title="Setting the scene…" sub={`Building a ${scenarioType.toLowerCase()} role-play`} />;
-  if (scoring) return <FullScreenStatus title="Reviewing your pitch…" sub="Structure, value, sales voice and confidence" />;
+  if (loading) {
+    return (
+      <FullScreenStatus
+        title="Setting the scene…"
+        sub={`Building “${scenarioDef.id}” with ${toYour(audience.label)}…`}
+      />
+    );
+  }
+  if (scoring) return <FullScreenStatus title="Reviewing your pitch…" sub="Structure, focus, tone and confidence" />;
 
   // ── Results ────────────────────────────────────────────────────────────────
   if (result) {
     return (
-      <article className="space-y-6 animate-fade-up">
+      <article className="flex flex-col gap-6 animate-fade-up">
+        <BackLink onClick={handleBackToBrief}>Back to the brief</BackLink>
+
         <ScoreCard
           scores={result.scores}
           feedback={result.feedback}
           dimensions={PITCH_DIMENSIONS}
-          onRecordAgain={handleTryAgain}
+          onRecordAgain={handleBackToBrief}
         />
 
         {result.swaps.length > 0 && (
@@ -146,15 +259,15 @@ export default function Pitch() {
 
         {result.strongerVersion && (
           <section className="rounded-2xl border border-border bg-white/60 p-6 shadow-soft space-y-3">
-            <Label>How a seasoned rep would say it</Label>
+            <Label>How a seasoned {goalLabel} would say it</Label>
             <p className="font-serif text-lg leading-[1.75] text-ink whitespace-pre-line">{result.strongerVersion}</p>
             <p className="font-sans text-xs text-inkFaint">Read it aloud a couple of times, then try your own version again.</p>
           </section>
         )}
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <button type="button" className="btn-primary flex-1" onClick={handleTryAgain}>Try this pitch again</button>
-          <button type="button" className="btn-secondary flex-1" onClick={handleNewScenario}>New scenario</button>
+          <button type="button" className="btn-primary flex-1" onClick={handleBackToBrief}>Try this pitch again</button>
+          <button type="button" className="btn-secondary flex-1" onClick={handleChangeScenario}>New scenario</button>
         </div>
       </article>
     );
@@ -165,15 +278,19 @@ export default function Pitch() {
     const recording = recorder.state === "recording";
     const limit = Number(scenario.timeLimitSeconds) || 60;
     return (
-      <article className="space-y-6 animate-fade-up">
+      <article className="flex flex-col gap-6 animate-fade-up">
+        <BackLink onClick={handleChangeScenario}>Change scenario</BackLink>
+
         <div className="space-y-1">
-          <p className="font-sans text-xs uppercase tracking-[0.2em] text-accent">{scenario.scenarioType}</p>
+          <p className="font-sans text-xs uppercase tracking-[0.2em] text-accent">
+            {goalLabel} · {scenario.scenarioType}
+          </p>
           <h2 className="font-serif text-2xl sm:text-3xl text-ink leading-snug">{scenario.title}</h2>
         </div>
 
         <section className="rounded-2xl border border-border bg-white/60 p-6 shadow-soft space-y-5">
           <div className="space-y-1">
-            <Label>Your buyer</Label>
+            <Label>{toYour(audience.label)}</Label>
             <p className="font-sans text-base text-ink font-semibold">
               {scenario.buyer?.name}, {scenario.buyer?.title}
             </p>
@@ -184,7 +301,7 @@ export default function Pitch() {
           <p className="font-serif text-base text-ink leading-relaxed">{scenario.situation}</p>
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label>You sell</Label>
+              <Label>{selling ? "You sell" : "Context"}</Label>
               <p className="font-sans text-sm text-ink">{scenario.product}</p>
             </div>
             <div className="space-y-1">
@@ -226,7 +343,7 @@ export default function Pitch() {
         <div className="rounded-2xl border border-border bg-white/70 px-5 py-4 flex items-center gap-4 shadow-sm">
           <div className="flex-1 min-w-0">
             <p className="font-sans text-sm font-semibold text-ink">
-              {recording ? "You're on. Speak to the buyer." : "Deliver your pitch out loud"}
+              {recording ? `You're on. Speak to ${toYour(audience.label)}.` : "Deliver it out loud"}
             </p>
             <p className="font-sans text-xs text-inkMuted">
               {recording
@@ -260,12 +377,6 @@ export default function Pitch() {
         )}
 
         {error && <p className="font-sans text-sm text-accent" role="alert">{error}</p>}
-
-        {!recording && (
-          <button type="button" className="btn-secondary w-full" onClick={handleNewScenario}>
-            New scenario
-          </button>
-        )}
       </article>
     );
   }
@@ -274,50 +385,97 @@ export default function Pitch() {
   return (
     <div className="flex-1 flex flex-col animate-fade-up">
       <div className="flex-1 flex flex-col surface p-6 sm:p-8 gap-7">
-        <div className="space-y-1">
-          <p className="font-sans text-xs uppercase tracking-[0.2em] text-inkFaint">Pitch practice</p>
-          <h1 className="font-serif text-3xl text-ink leading-tight">Talk like you&apos;re already in the role</h1>
-          <p className="font-sans text-sm text-inkMuted leading-relaxed">
-            Practising for <span className="text-ink font-medium">{targetRole}</span>. You get a realistic buyer and
-            situation, pitch out loud in your own words, then get coached on what a seasoned rep would say.
-          </p>
+        <div className="flex flex-col gap-3">
+          <BackLink onClick={() => navigate("/")}>Today</BackLink>
+          <div className="space-y-1">
+            <p className="font-sans text-xs uppercase tracking-[0.2em] text-inkFaint">Pitch practice</p>
+            <h1 className="font-serif text-3xl text-ink leading-tight">Talk like you&apos;re already in the role</h1>
+            <p className="font-sans text-sm text-inkMuted leading-relaxed">
+              Practising for <span className="text-ink font-medium">{goalLabel || "…"}</span>, speaking to{" "}
+              <span className="text-ink font-medium">{toYour(audience.label)}</span>.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2.5">
+          <Label>Practising for</Label>
+          <div className="flex flex-wrap gap-2">
+            {PITCH_GOALS.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                data-active={g.id === goalId}
+                className="chip text-xs py-1.5 px-3.5"
+                onClick={() => selectGoal(g.id)}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+          {goal.id === "other" && (
+            <input
+              className="input text-sm"
+              value={customGoal}
+              maxLength={CUSTOM_GOAL_MAX}
+              onChange={(e) => changeCustomGoal(e.target.value)}
+              placeholder='What are you practising for? e.g. "Developer relations"'
+              autoFocus
+            />
+          )}
+        </div>
+
+        <div className="space-y-2.5">
+          <Label>Who are you speaking to?</Label>
+          <div className="flex flex-wrap gap-2">
+            {goal.audiences.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                data-active={a.id === audience.id}
+                className="chip text-xs py-1.5 px-3.5"
+                onClick={() => selectAudience(a.id)}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+          <p className="font-sans text-xs text-inkFaint leading-relaxed">{audience.style}</p>
         </div>
 
         <div className="space-y-2.5">
           <Label>Scenario</Label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {PITCH_SCENARIOS.map(({ id, hint }) => (
+            {goal.scenarios.map((s) => (
               <button
-                key={id}
+                key={s.id}
                 type="button"
-                onClick={() => setScenarioType(id)}
-                aria-pressed={scenarioType === id}
+                onClick={() => selectScenario(s)}
+                aria-pressed={scenarioDef.id === s.id}
                 className={`rounded-xl border px-4 py-3 text-left transition ${
-                  scenarioType === id ? "border-accent bg-accentSoft/40" : "border-border bg-white/50 hover:border-accent/40"
+                  scenarioDef.id === s.id ? "border-accent bg-accentSoft/40" : "border-border bg-white/50 hover:border-accent/40"
                 }`}
               >
-                <span className="block font-sans text-sm font-semibold text-ink">{id}</span>
-                <span className="block font-sans text-xs text-inkMuted mt-0.5">{hint}</span>
+                <span className="block font-sans text-sm font-semibold text-ink">{s.id}</span>
+                <span className="block font-sans text-xs text-inkMuted mt-0.5">{s.hint}</span>
               </button>
             ))}
           </div>
         </div>
 
         <label className="flex flex-col gap-1.5">
-          <Label>What are you selling? (optional)</Label>
+          <Label>{selling ? "What are you selling? (optional)" : "Any context? (optional)"}</Label>
           <input
             className="input text-sm"
-            value={product}
-            onChange={(e) => setProduct(e.target.value)}
-            placeholder="Leave blank and we'll invent a SaaS product, or name the one you're interviewing for"
+            value={context}
+            maxLength={500}
+            onChange={(e) => setContext(e.target.value)}
+            placeholder={
+              selling
+                ? "Leave blank and we'll invent a SaaS product, or name the one you're interviewing for"
+                : "e.g. the product area, the customer, what went wrong"
+            }
           />
         </label>
-
-        {!profile.targetRole && (
-          <p className="font-sans text-xs text-inkFaint">
-            Changing careers? Set the role you&apos;re pivoting into in Settings and your daily passages will be written in that voice too.
-          </p>
-        )}
 
         {error && <p className="text-sm text-accent" role="alert">{error}</p>}
 

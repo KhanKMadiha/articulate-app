@@ -397,48 +397,60 @@ Respond with ONLY this JSON (no markdown, no commentary):
   }
 });
 
-const PITCH_SCENARIOS = {
-  "Elevator pitch":        "A 60-second pitch to a senior buyer you meet by chance. Hook, problem, value, ask.",
-  "Cold call opener":      "The first 45 seconds of a cold call. Earn the right to keep talking and book a meeting.",
-  "Discovery call":        "Open a first meeting, set the agenda, and ask questions that uncover pain and impact.",
-  "Product demo":          "Introduce a demo by tying it to the buyer's specific problems before showing anything.",
-  "Handling an objection": "The buyer raises a hard objection. Acknowledge, explore, reframe, and move forward.",
-  "Closing next steps":    "End a strong meeting by summarising value and securing a concrete next step.",
-};
+/** Trimmed string capped at `max` chars, or `fallback` when missing/empty. */
+function clip(value, max, fallback = "") {
+  const s = typeof value === "string" ? value.trim().slice(0, max) : "";
+  return s || fallback;
+}
+
+function readPitchContext(body) {
+  return {
+    goalLabel: clip(body.goalLabel, 80, "a client-facing role"),
+    audienceLabel: clip(body.audienceLabel, 80, "a senior stakeholder"),
+    audienceStyle: clip(body.audienceStyle, 300),
+  };
+}
 
 app.post("/api/generate-pitch", async (req, res) => {
   if (!apiKey) {
     return res.status(500).json({ error: "Server misconfiguration: ANTHROPIC_API_KEY is not set." });
   }
 
-  const { role, industry, targetRole, scenarioType, product } = req.body || {};
-  const type = PITCH_SCENARIOS[scenarioType] ? scenarioType : "Elevator pitch";
-  const target = targetRole || "Account Executive in tech sales";
+  const body = req.body || {};
+  const { goalLabel, audienceLabel, audienceStyle } = readPitchContext(body);
+  const role = clip(body.role, 80, "a professional");
+  const industry = clip(body.industry, 80, "their field");
+  const type = clip(body.scenarioType, 80, "Short spoken update");
+  const brief = clip(body.scenarioBrief, 300);
+  const context = clip(body.context, 500);
 
-  const system = `You are a top-performing tech sales leader who coaches career changers breaking into ${target}. You design realistic role-play scenarios that feel like a real day in a B2B tech sales job.`;
+  const system = `You are an expert communication coach for people stepping into ${goalLabel}. You design realistic role-play scenarios that feel like a real day in that job.`;
 
   const userMessage = `Create one practice scenario.
 
-LEARNER: Currently ${role || "a professional"} in ${industry || "their field"}, pivoting into ${target}.
-SCENARIO TYPE: ${type} — ${PITCH_SCENARIOS[type]}
-WHAT THEY SELL: ${product ? product : "Invent a believable B2B SaaS product (not a famous brand). Make it specific."}
+LEARNER: Currently ${role} in ${industry}, practising for ${goalLabel}.
+SCENARIO TYPE: ${type}${brief ? ` — ${brief}` : ""}
+AUDIENCE: ${audienceLabel}${audienceStyle ? ` — ${audienceStyle}` : ""}
+CONTEXT: ${context || "None given. Invent believable specifics, with fictional company and people names (not famous brands)."}
 
 Rules:
-- The buyer is a realistic persona with a real-sounding (fictional) company, a specific business problem, and numbers where it helps.
+- The "buyer" field is the person the learner is speaking to, and they must be this audience: ${audienceLabel}. Give them a realistic name, job title, and (fictional) organisation, plus a specific situation with numbers where it helps.
+- "product" is what the learner is offering, owns, or is responsible for in this moment: a product, a fix, a proposal, or a plan.
 - beats are the 3 to 4 moves the learner should hit, in order, written as short instructions.
-- phrasesToTry are 3 short, natural lines a strong rep would actually say in this moment. Not cheesy, not scripted-sounding.
-- likelyObjection is one realistic pushback this buyer would give.
-- If the learner's current background gives them credibility with this buyer, mention how to use it in "yourEdge". Otherwise give a general confidence tip.
+- phrasesToTry are 3 short, natural lines someone experienced in ${goalLabel} would actually say to this person. Not cheesy, not scripted-sounding.
+- likelyObjection is one realistic pushback or tough question the other person would raise.
+- If the learner's current background gives them credibility with the other person, mention how to use it in "yourEdge". Otherwise give a general confidence tip.
+- Pitch the level of detail and tone to the audience.
 - No em dashes.
 
 Respond with ONLY this JSON (no markdown, no commentary):
 {
   "title": "<short title>",
   "scenarioType": "${type}",
-  "buyer": { "name": "<first and last name>", "title": "<job title>", "company": "<company>", "companyDescription": "<one line>" },
+  "buyer": { "name": "<first and last name>", "title": "<job title>", "company": "<organisation>", "companyDescription": "<one line>" },
   "situation": "<2-3 sentences setting the scene>",
-  "product": "<one line: what you sell and the core value>",
-  "goal": "<one line: what success looks like for this pitch>",
+  "product": "<one line: what the learner offers or is responsible for here>",
+  "goal": "<one line: what success looks like>",
   "likelyObjection": "<one line>",
   "beats": ["<beat>", "<beat>", "<beat>"],
   "phrasesToTry": ["<phrase>", "<phrase>", "<phrase>"],
@@ -462,35 +474,38 @@ app.post("/api/score-pitch", async (req, res) => {
     return res.status(500).json({ error: "Server misconfiguration: ANTHROPIC_API_KEY is not set." });
   }
 
-  const { scenario, transcript, durationSeconds, targetRole } = req.body || {};
-  if (!scenario || !transcript) {
+  const body = req.body || {};
+  const { scenario, transcript, durationSeconds } = body;
+  if (!scenario || typeof scenario !== "object" || typeof transcript !== "string" || !transcript.trim()) {
     return res.status(400).json({ error: "scenario and transcript are required." });
   }
 
+  const { goalLabel, audienceLabel, audienceStyle } = readPitchContext(body);
   const actualSecs = Math.round(Number(durationSeconds) || 0);
-  const target = targetRole || "Account Executive in tech sales";
 
-  const userMessage = `A career changer pivoting into ${target} just delivered this pitch out loud in a role-play. Coach them.
+  const userMessage = `Someone stepping into ${goalLabel} just delivered this out loud to ${audienceLabel} in a role-play. Coach them.
 
 SCENARIO:
 ${JSON.stringify(scenario, null, 2)}
 
-THEIR PITCH (speech-to-text, so ignore punctuation and small transcription errors):
+WHAT THEY SAID (speech-to-text, so ignore punctuation and small transcription errors):
 """
 ${transcript}
 """
 ${actualSecs > 0 ? `\nThey spoke for ${actualSecs}s. Target was about ${scenario.timeLimitSeconds || 60}s.` : ""}
 
 Score each dimension 1–10:
-- structure: Did they hit the beats in a logical order and finish with a clear ask or next step?
-- valueFocus: Did they lead with the buyer's problem and business impact rather than product features?
-- salesLanguage: Do they sound like an experienced tech seller? Confident, specific, natural use of sales vocabulary, good questions.
+- structure: Did they hit the beats in order and finish with a clear ask or next step?
+- valueFocus: Did they lead with what matters to ${audienceLabel}, rather than internal detail?
+- salesLanguage: Do they sound like a seasoned ${goalLabel}? The vocabulary and rhythm of the role.
 - confidence: Filler words, hedging ("I just wanted to", "sort of", "maybe", "sorry"), rambling, and length vs the target all count against this.
-- overall: Holistic. Would this get a second meeting?
+- overall: Holistic. Would this land with ${audienceLabel}?
+
+Judge whether the level of detail and tone fit ${audienceLabel}${audienceStyle ? ` (${audienceStyle})` : ""}. Too much technical detail for an exec, or too vague for an engineer, should cost points and be named in feedback.
 
 Then:
 - swaps: up to 3 things they actually said that weakened them, each with a stronger alternative. Quote them closely. If nothing weak, return an empty array.
-- strongerVersion: rewrite their pitch as a strong ${target} would say it, about 80–130 words, keeping their ideas and facts. Written for the voice, so they can read it aloud to practise. No em dashes.
+- strongerVersion: rewrite it as a seasoned ${goalLabel} would say it to ${audienceLabel}, about 80–130 words, keeping their ideas and facts. Written for the voice, so they can read it aloud to practise. No em dashes.
 
 Respond with ONLY this JSON (no markdown, no commentary):
 {
@@ -508,7 +523,7 @@ Respond with ONLY this JSON (no markdown, no commentary):
 
   try {
     const parsed = await askClaudeForJSON({
-      system: "You are a tech sales coach who helps career changers sound like seasoned sellers. Be encouraging but honest, specific, and practical.",
+      system: "You are a communication coach who helps people sound like seasoned professionals in a new role. Be encouraging but honest, specific, and practical.",
       userMessage,
       maxTokens: 2048,
     });

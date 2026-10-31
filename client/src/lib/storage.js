@@ -4,6 +4,8 @@ const LEGACY_PROFILE_KEY = "articulate_profile";
 const FAVOURITES_KEY = "articulate_favourites";
 const READ_DATES_KEY = "articulate_read_dates";
 const PITCH_DATES_KEY = "articulate_pitch_dates";
+const PITCH_GOAL_KEY = "articulate_pitch_goal";
+const PITCH_AUDIENCE_KEY = "articulate_pitch_audience";
 const SESSION_KEY = "articulate_session";
 
 function isValidReadingStyle(v) {
@@ -136,6 +138,39 @@ function addDate(key, yyyyMmDd) {
 
 export const loadReadDates = () => loadDates(READ_DATES_KEY);
 export const addReadDate = (yyyyMmDd) => addDate(READ_DATES_KEY, yyyyMmDd);
+
+/** Last pitch goal: { id, custom } where custom is the free-text label for "other". */
+export function loadPitchGoal() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PITCH_GOAL_KEY));
+    if (!v || typeof v.id !== "string") return null;
+    return { id: v.id, custom: typeof v.custom === "string" ? v.custom : "" };
+  } catch {
+    return null;
+  }
+}
+
+export function savePitchGoal(id, custom = "") {
+  try {
+    localStorage.setItem(PITCH_GOAL_KEY, JSON.stringify({ id, custom }));
+  } catch {}
+}
+
+/** Last audience per goal: { [goalId]: audienceId }. */
+export function loadPitchAudiences() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PITCH_AUDIENCE_KEY));
+    return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+  } catch {
+    return {};
+  }
+}
+
+export function savePitchAudiences(map) {
+  try {
+    localStorage.setItem(PITCH_AUDIENCE_KEY, JSON.stringify(map));
+  } catch {}
+}
 
 /** Pitch practice days, kept separate so the reading streak only counts passages. */
 export const loadPitchDates = () => loadDates(PITCH_DATES_KEY);

@@ -35,6 +35,11 @@ function ScoreEntry({ entry }) {
         <div className="min-w-0 space-y-0.5">
           <p className="font-sans text-xs text-inkMuted">{formatted} · {entry.passageTheme}</p>
           <p className="font-serif text-base text-ink leading-snug truncate">{entry.passageTitle}</p>
+          {entry.kind === "pitch" && entry.goalLabel && (
+            <p className="font-sans text-xs text-inkFaint truncate">
+              {entry.goalLabel}{entry.audienceLabel ? ` · ${entry.audienceLabel}` : ""}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full border-2 font-sans font-bold text-base ${scoreColor(entry.scores.overall)}`}>
