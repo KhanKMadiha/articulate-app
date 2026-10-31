@@ -48,6 +48,10 @@ Most of us know what we want to say. The gap is how we say it. The confidence, t
 
 ![Focus areas](screenshots/02-focus-areas.png)
 
+### Career pivot
+
+![Career pivot](screenshots/03-career-pivot.png)
+
 ### Daily home
 
 ![Home](screenshots/04-home.png)
