@@ -9,7 +9,6 @@ import Favourites from "./pages/Favourites.jsx";
 import Progress from "./pages/Progress.jsx";
 import Settings from "./pages/Settings.jsx";
 import AppShell from "./components/AppShell.jsx";
-import { countReadsThisWeek } from "./lib/dates.js";
 
 export default function App() {
   const [profile, setProfile] = useState(() => loadProfile());
@@ -27,7 +26,6 @@ export default function App() {
     () => ({
       profile,
       readDates,
-      weekCount: countReadsThisWeek(readDates),
       allTimeCount: readDates.length,
       refreshProfile,
       refreshReads,

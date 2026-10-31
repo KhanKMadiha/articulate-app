@@ -239,6 +239,11 @@ export default function Home() {
           <h1 className="font-serif text-3xl text-ink leading-tight">Hello, {firstName}</h1>
           <p className="font-sans text-sm text-inkMuted leading-relaxed">{subline}</p>
           <WeekStrip readDates={readDates} />
+          {yesterday && (
+            <p className="font-sans text-xs text-inkFaint pt-1">
+              Yesterday: {yesterday.theme}{yesterday.minutes ? ` · ${yesterday.minutes} min` : ""}
+            </p>
+          )}
         </div>
 
         <div className="h-px bg-border" />
@@ -320,16 +325,12 @@ export default function Home() {
               </span>
             </div>
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-inkMuted">
-                <span className="w-1 h-1 rounded-full bg-accent/50 shrink-0" />
-                <p className="font-sans text-sm">
-                  {yesterday
-                    ? `Yesterday: ${yesterday.theme}${yesterday.minutes ? ` · ${yesterday.minutes} min` : ""}`
-                    : "Surprise theme, chosen for you"}
-                </p>
+              <div className="flex items-start gap-2 text-inkMuted">
+                <span className="w-1 h-1 mt-2 rounded-full bg-accent/50 shrink-0" />
+                <p className="font-sans text-sm">Surprise theme, chosen for you</p>
               </div>
-              <div className="flex items-center gap-2 text-inkMuted">
-                <span className="w-1 h-1 rounded-full bg-accent/50 shrink-0" />
+              <div className="flex items-start gap-2 text-inkMuted">
+                <span className="w-1 h-1 mt-2 rounded-full bg-accent/50 shrink-0" />
                 <p className="font-sans text-sm">Written around your goals and profile</p>
               </div>
             </div>
@@ -371,6 +372,60 @@ export default function Home() {
             </button>
           </div>
         )}
+
+        {/* Error */}
+        {error && <p className="text-sm text-accent" role="alert">{error}</p>}
+
+        {/* CTA */}
+        <div className="space-y-3">
+          {dayState === "fresh" && (
+            <button type="button" className="btn-primary w-full py-4 text-base" onClick={handleGenerate}>
+              {checkinFirst ? "Generate today's passage" : "Open today's passage"}
+            </button>
+          )}
+
+          {dayState === "inProgress" && (
+            <button type="button" className="btn-primary w-full py-4 text-base" onClick={() => navigate("/read")}>
+              Continue reading
+            </button>
+          )}
+
+          {dayState !== "done" && (
+            <div className="flex justify-center px-1">
+              <button
+                type="button"
+                onClick={() => navigate("/pitch")}
+                className="font-sans text-sm text-inkMuted hover:text-accent transition-colors"
+              >
+                Or practise a pitch →
+              </button>
+            </div>
+          )}
+
+          {dayState === "inProgress" && (
+            <div className="flex justify-center px-1">
+              <button
+                type="button"
+                onClick={handleStartFresh}
+                className="font-sans text-sm text-inkFaint hover:text-inkMuted transition-colors"
+              >
+                Start fresh
+              </button>
+            </div>
+          )}
+
+          {dayState === "done" && (
+            <div className="flex justify-center px-1">
+              <button
+                type="button"
+                onClick={resetToFresh}
+                className="font-sans text-sm text-inkFaint hover:text-inkMuted transition-colors"
+              >
+                Read another
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Daily reminder — subtle collapsible row */}
         {showReminderPrompt && (
@@ -424,59 +479,6 @@ export default function Home() {
             Reminder set for {reminderTime} every day ✓
           </p>
         )}
-
-        {/* Error */}
-        {error && <p className="text-sm text-accent" role="alert">{error}</p>}
-
-        {/* CTA */}
-        <div className="space-y-3">
-          {dayState === "fresh" && (
-            <button type="button" className="btn-primary w-full py-4 text-base" onClick={handleGenerate}>
-              {checkinFirst ? "Generate today's passage" : "Open today's passage"}
-            </button>
-          )}
-
-          {dayState === "inProgress" && (
-            <button type="button" className="btn-primary w-full py-4 text-base" onClick={() => navigate("/read")}>
-              Continue reading
-            </button>
-          )}
-
-          {dayState !== "done" && (
-            <button
-              type="button"
-              onClick={() => navigate("/pitch")}
-              className="w-full rounded-2xl border border-border bg-white/40 px-5 py-4 text-left hover:border-accent/40 transition-colors"
-            >
-              <p className="font-sans text-sm font-semibold text-ink">Practise a pitch →</p>
-              <p className="font-sans text-xs text-inkMuted mt-0.5">{pitchDescription}</p>
-            </button>
-          )}
-
-          {dayState === "inProgress" && (
-            <div className="flex justify-end px-1">
-              <button
-                type="button"
-                onClick={handleStartFresh}
-                className="font-sans text-sm text-inkFaint hover:text-inkMuted transition-colors"
-              >
-                Start fresh
-              </button>
-            </div>
-          )}
-
-          {dayState === "done" && (
-            <div className="flex justify-center px-1">
-              <button
-                type="button"
-                onClick={resetToFresh}
-                className="font-sans text-sm text-inkMuted hover:text-accent transition-colors"
-              >
-                Read another
-              </button>
-            </div>
-          )}
-        </div>
 
       </div>
     </div>

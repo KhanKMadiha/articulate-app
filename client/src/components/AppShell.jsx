@@ -51,7 +51,7 @@ const NAV = [
 
 export default function AppShell({ children, streak }) {
   const { pathname } = useLocation();
-  const { weekCount, allTimeCount } = streak;
+  const { allTimeCount } = streak;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -66,11 +66,6 @@ export default function AppShell({ children, streak }) {
           </Link>
 
           <div className="flex items-center gap-4 shrink-0">
-            <div className="flex items-center gap-1.5">
-              <span className="font-sans text-[10px] uppercase tracking-wider text-inkFaint">Week</span>
-              <span className="font-sans text-sm font-semibold text-ink tabular-nums">{weekCount}</span>
-            </div>
-            <div className="w-px h-4 bg-border" aria-hidden />
             <div className="flex items-center gap-1.5">
               <span className="font-sans text-[10px] uppercase tracking-wider text-inkFaint">Total</span>
               <span className="font-sans text-sm font-semibold text-ink tabular-nums">{allTimeCount}</span>

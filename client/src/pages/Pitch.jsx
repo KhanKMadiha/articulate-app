@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { PITCH_DIMENSIONS, PITCH_SCENARIOS } from "../lib/constants.js";
 import { generatePitch, scorePitch } from "../lib/api.js";
-import { addReadDate, saveScore } from "../lib/storage.js";
+import { addPitchDate, saveScore } from "../lib/storage.js";
 import { todayKey } from "../lib/dates.js";
 import { useRecorder } from "../hooks/useRecorder.js";
 import ScoreCard from "../components/ScoreCard.jsx";
@@ -36,7 +36,7 @@ function formatSeconds(s) {
 }
 
 export default function Pitch() {
-  const { profile, refreshReads } = useOutletContext();
+  const { profile } = useOutletContext();
   const targetRole = profile.targetRole || "Tech sales (Account Executive)";
 
   const [scenarioType, setScenarioType] = useState(PITCH_SCENARIOS[0].id);
@@ -99,8 +99,7 @@ export default function Pitch() {
           feedback: data.feedback,
           recordedAt: new Date().toISOString(),
         });
-        addReadDate(dateKey);
-        refreshReads();
+        addPitchDate(dateKey);
       })
       .catch((e) => setError(e.message || "Scoring failed. Try again."))
       .finally(() => setScoring(false));

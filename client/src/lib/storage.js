@@ -3,6 +3,7 @@ const SCORES_KEY = "articulate_scores";
 const LEGACY_PROFILE_KEY = "articulate_profile";
 const FAVOURITES_KEY = "articulate_favourites";
 const READ_DATES_KEY = "articulate_read_dates";
+const PITCH_DATES_KEY = "articulate_pitch_dates";
 const SESSION_KEY = "articulate_session";
 
 function isValidReadingStyle(v) {
@@ -113,9 +114,9 @@ export function saveFavourites(list) {
   localStorage.setItem(FAVOURITES_KEY, JSON.stringify(list));
 }
 
-export function loadReadDates() {
+function loadDates(key) {
   try {
-    const raw = localStorage.getItem(READ_DATES_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return [];
     const arr = JSON.parse(raw);
     if (!Array.isArray(arr)) return [];
@@ -125,17 +126,24 @@ export function loadReadDates() {
   }
 }
 
-export function addReadDate(yyyyMmDd) {
-  const dates = new Set(loadReadDates());
+function addDate(key, yyyyMmDd) {
+  const dates = new Set(loadDates(key));
   dates.add(yyyyMmDd);
   const sorted = [...dates].sort();
-  localStorage.setItem(READ_DATES_KEY, JSON.stringify(sorted));
+  localStorage.setItem(key, JSON.stringify(sorted));
   return sorted;
 }
 
+export const loadReadDates = () => loadDates(READ_DATES_KEY);
+export const addReadDate = (yyyyMmDd) => addDate(READ_DATES_KEY, yyyyMmDd);
+
+/** Pitch practice days, kept separate so the reading streak only counts passages. */
+export const loadPitchDates = () => loadDates(PITCH_DATES_KEY);
+export const addPitchDate = (yyyyMmDd) => addDate(PITCH_DATES_KEY, yyyyMmDd);
+
 export function loadSession() {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     return JSON.parse(raw);
   } catch {
@@ -144,11 +152,11 @@ export function loadSession() {
 }
 
 export function saveSession(data) {
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  localStorage.setItem(SESSION_KEY, JSON.stringify(data));
 }
 
 export function clearSession() {
-  sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_KEY);
 }
 
 export function loadScores() {
